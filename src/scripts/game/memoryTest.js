@@ -52,7 +52,7 @@ export function createMemoryTest({ stageEl, letter, correctWagons, allWords, sou
         const img = createElement('img', {
             classes: 'memory-test__card-image',
             attrs: {
-                src: `../images/${card.file}`,
+                src: `images/${card.file}`,
                 alt: card.text,
                 loading: 'lazy',
             },

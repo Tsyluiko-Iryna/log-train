@@ -56,7 +56,7 @@ export function createTrainManager({ stageEl, letter, typeData }) {
         const img = createElement('img', {
             classes: 'train-item__image',
             attrs: {
-                src: `../images/${file}`,
+                src: `images/${file}`,
                 alt: text,
                 draggable: 'false',
             },

@@ -24,7 +24,7 @@ export async function preloadImages(fileNames, { onProgress } = {}) {
                 update();
                 resolve({ fileName, status: 'error' });
             };
-            img.src = `../images/${fileName}`;
+            img.src = `images/${fileName}`;
         } catch (error) {
             logError('assetLoader.task', error);
             update();

@@ -212,7 +212,7 @@ export default async function renderGame(appRoot, context) {
             const img = createElement('img', {
                 classes: 'train-car__image',
                 attrs: {
-                    src: `../images/${item.file}`,
+                    src: `images/${item.file}`,
                     alt: item.text,
                     draggable: 'false',
                 },

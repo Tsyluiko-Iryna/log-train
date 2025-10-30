@@ -22,7 +22,7 @@ export default function renderHome(appRoot, context) {
         const visual = createElement('div', { classes: 'game-card__visual' });
         const visualImg = createElement('img', {
             attrs: {
-                src: '../images/potyah.png',
+                src: 'images/potyah.png',
                 alt: 'Потяг',
                 loading: 'lazy',
             },
