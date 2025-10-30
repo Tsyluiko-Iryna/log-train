@@ -1,4 +1,5 @@
 import { logError } from '../utils/logger.js';
+import { getImageUrl } from '../utils/assets.js';
 
 export async function preloadImages(fileNames, { onProgress } = {}) {
     const unique = Array.from(new Set(fileNames));
@@ -24,7 +25,7 @@ export async function preloadImages(fileNames, { onProgress } = {}) {
                 update();
                 resolve({ fileName, status: 'error' });
             };
-            img.src = `images/${fileName}`;
+            img.src = getImageUrl(fileName);
         } catch (error) {
             logError('assetLoader.task', error);
             update();

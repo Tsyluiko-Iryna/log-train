@@ -81,8 +81,16 @@ export function createQuestionManager({ stageEl, wagons, soundManager, onComplet
 
     let questionIndex = 0;
     let active = true;
+    let feedbackTimer = null;
     const preparedQuestions = buildQuestions(wagons);
     stageEl.append(panel);
+
+    function clearFeedbackTimer() {
+        if (feedbackTimer) {
+            clearTimeout(feedbackTimer);
+            feedbackTimer = null;
+        }
+    }
 
     function updatePanelState(state) {
         panel.classList.remove('is-success', 'is-error');
@@ -96,6 +104,7 @@ export function createQuestionManager({ stageEl, wagons, soundManager, onComplet
             handleComplete();
             return;
         }
+        clearFeedbackTimer();
         const item = preparedQuestions[questionIndex];
         setTextContent(questionText, item.text);
         setTextContent(progress, texts.questions.progress(questionIndex + 1, preparedQuestions.length));
@@ -103,12 +112,14 @@ export function createQuestionManager({ stageEl, wagons, soundManager, onComplet
     }
 
     function handleComplete() {
+        clearFeedbackTimer();
         active = false;
         panel.remove();
         onComplete?.();
     }
 
     function evaluate(word) {
+        clearFeedbackTimer();
         if (!active || !preparedQuestions.length) {
             return { correct: false, finished: false };
         }
@@ -130,6 +141,16 @@ export function createQuestionManager({ stageEl, wagons, soundManager, onComplet
         updatePanelState('is-error');
         setTextContent(questionText, texts.questions.incorrect);
         soundManager.playError?.();
+        feedbackTimer = setTimeout(() => {
+            if (!active) {
+                return;
+            }
+            const current = preparedQuestions[questionIndex];
+            updatePanelState(null);
+            if (current) {
+                setTextContent(questionText, current.text);
+            }
+        }, 1200);
         return { correct: false, finished: false };
     }
 
@@ -142,6 +163,7 @@ export function createQuestionManager({ stageEl, wagons, soundManager, onComplet
     return {
         evaluate,
         destroy() {
+            clearFeedbackTimer();
             panel.remove();
         },
     };

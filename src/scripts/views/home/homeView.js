@@ -4,6 +4,7 @@ import { listLetters, listTypes } from '../../data/wordSets.js';
 import { setSelection, clearSelection } from '../../store/session.js';
 import { logError } from '../../utils/logger.js';
 import { attachHeightScaler } from '../../utils/scaler.js';
+import { getImageUrl } from '../../utils/assets.js';
 
 export default function renderHome(appRoot, context) {
     const disposables = [];
@@ -16,13 +17,13 @@ export default function renderHome(appRoot, context) {
         const container = createElement('div', { classes: 'home-container' });
         const header = createElement('header', { classes: 'home-header' });
         const title = createElement('h1', { classes: 'home-header__title', text: texts.siteTitle });
-    header.append(title);
+        header.append(title);
 
         const gameCard = createElement('section', { classes: 'game-card' });
         const visual = createElement('div', { classes: 'game-card__visual' });
         const visualImg = createElement('img', {
             attrs: {
-                src: 'images/potyah.png',
+                src: getImageUrl('potyah.png'),
                 alt: 'Потяг',
                 loading: 'lazy',
             },

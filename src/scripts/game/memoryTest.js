@@ -1,6 +1,7 @@
 import { createElement, setTextContent } from '../utils/dom.js';
 import { texts } from '../data/texts.js';
 import { logError } from '../utils/logger.js';
+import { getImageUrl } from '../utils/assets.js';
 
 function shuffle(array) {
     const copy = [...array];
@@ -40,7 +41,7 @@ export function createMemoryTest({ stageEl, letter, correctWagons, allWords, sou
 
     const cards = shuffle([
         ...correctWagons.map(item => ({ ...item, isCorrect: true })),
-    ...effectiveDistractors.map(item => ({ text: item.text, file: item.file, isCorrect: false })),
+        ...effectiveDistractors.map(item => ({ text: item.text, file: item.file, isCorrect: false })),
     ]);
 
     const selected = new Set();
@@ -52,7 +53,7 @@ export function createMemoryTest({ stageEl, letter, correctWagons, allWords, sou
         const img = createElement('img', {
             classes: 'memory-test__card-image',
             attrs: {
-                src: `images/${card.file}`,
+                src: getImageUrl(card.file),
                 alt: card.text,
                 loading: 'lazy',
             },

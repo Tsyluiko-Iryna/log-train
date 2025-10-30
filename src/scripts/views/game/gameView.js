@@ -8,6 +8,7 @@ import { createSoundManager } from '../../game/soundManager.js';
 import { createQuestionManager } from '../../game/questionManager.js';
 import { createMemoryTest } from '../../game/memoryTest.js';
 import { logError } from '../../utils/logger.js';
+import { getImageUrl } from '../../utils/assets.js';
 
 function shuffle(array) {
     const copy = [...array];
@@ -43,11 +44,11 @@ export default async function renderGame(appRoot, context) {
         const correctWords = typeData.correct.map(item => ({ text: item.text, file: item.file }));
         const distractorPool = allWords.filter(item => !correctWords.some(word => word.text === item.text));
         const requiredDistractors = Math.max(9 - correctWords.length, 0);
-    const memoryDistractors = shuffle(distractorPool).slice(0, requiredDistractors);
+        const memoryDistractors = shuffle(distractorPool).slice(0, requiredDistractors);
 
         const assets = new Set(['locomotive.png']);
         typeData.all.forEach(word => assets.add(word.file));
-    memoryDistractors.forEach(word => assets.add(word.file));
+        memoryDistractors.forEach(word => assets.add(word.file));
 
         context.showLoader(texts.loader.fetchingAssets);
         await preloadImages(Array.from(assets), {
@@ -94,7 +95,7 @@ export default async function renderGame(appRoot, context) {
         trainManager = createTrainManager({ stageEl: stage, letter, typeData });
         await trainManager.init();
 
-        const showStatus = (status) => {
+    const showStatus = status => {
             message.classList.remove('is-success', 'is-error', 'is-visible');
             if (status === 'success') {
                 setTextContent(message, texts.game.messageSuccess);
@@ -212,7 +213,7 @@ export default async function renderGame(appRoot, context) {
             const img = createElement('img', {
                 classes: 'train-car__image',
                 attrs: {
-                    src: `images/${item.file}`,
+                    src: getImageUrl(item.file),
                     alt: item.text,
                     draggable: 'false',
                 },

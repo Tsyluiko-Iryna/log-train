@@ -1,5 +1,6 @@
 import { createElement } from '../utils/dom.js';
 import { logError } from '../utils/logger.js';
+import { getImageUrl } from '../utils/assets.js';
 import { clamp, nextFrame, randomPosition } from './helpers.js';
 
 const ATTACH_THRESHOLD = 48;
@@ -56,7 +57,7 @@ export function createTrainManager({ stageEl, letter, typeData }) {
         const img = createElement('img', {
             classes: 'train-item__image',
             attrs: {
-                src: `images/${file}`,
+                src: getImageUrl(file),
                 alt: text,
                 draggable: 'false',
             },
