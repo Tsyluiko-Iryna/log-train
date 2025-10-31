@@ -452,6 +452,7 @@ button:active:not(:disabled) {
 .train-item--cab .train-item__label {
     text-transform: uppercase;
     letter-spacing: 0.08em;
+    font-size: 200%;
 }
 
 .train-item.is-dragging {
@@ -563,6 +564,7 @@ button:active:not(:disabled) {
 .train-car--cab .train-car__label {
     text-transform: uppercase;
     letter-spacing: 0.08em;
+    font-size: 200%;
 }
 
 .train-car--interactive {
