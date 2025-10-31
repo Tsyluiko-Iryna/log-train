@@ -113,6 +113,7 @@ button:active:not(:disabled) {
     gap: clamp(0.75rem, 1.6vh, 1.4rem);
     transform-origin: top center;
     will-change: transform;
+    transition: transform var(--transition-medium);
 }
 
 .home-header {

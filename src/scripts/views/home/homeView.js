@@ -67,7 +67,7 @@ export default function renderHome(appRoot, context) {
         wrapper.append(container);
         appRoot.append(wrapper);
 
-        const scaler = attachHeightScaler(container, { margin: 16, minScale: 0.5 });
+    const scaler = attachHeightScaler(container, { margin: 16, minScale: 0.5, widthOffset: 10 });
         disposables.push(() => scaler.dispose());
 
         let selectedLetter = null;
