@@ -329,3 +329,89 @@ export function getAllWordsForLetter(letter) {
         return [];
     }
 }
+
+// --- Differentiation loader from text file ---
+
+function normalizeWordToken(token) {
+    return token
+        .replace(/[\.\!\?]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
+function parseWordList(segment) {
+    // segment is the part after "Правильні:" або "Неправильні:"
+    return segment
+        .split(',')
+        .map(normalizeWordToken)
+        .filter(Boolean);
+}
+
+function ensureLetterEntry(letter) {
+    if (!wordSets[letter]) {
+        wordSets[letter] = { letter, types: {} };
+    }
+    return wordSets[letter];
+}
+
+function upsertDiffType(letter, typeName, correctWords, incorrectWords) {
+    const entry = ensureLetterEntry(letter);
+    const uniq = arr => Array.from(new Set(arr));
+    const c = uniq(correctWords).map(w => buildWordEntry(w, true));
+    const i = uniq(incorrectWords).map(w => buildWordEntry(w, false));
+    entry.types[typeName] = { type: typeName, correct: c, incorrect: i, all: [...c, ...i] };
+}
+
+function parseDifferentiationText(text) {
+    const lines = text.split(/\r?\n/);
+    const blocks = [];
+    let current = null;
+    const headerRe = /^\s*Диференціація\s+([А-ЯІЇЄҐA-Z])\s*[-—]\s*([А-ЯІЇЄҐA-Z])\s*$/u;
+    for (const raw of lines) {
+        const line = raw.trim();
+        if (!line) continue;
+        const m = line.match(headerRe);
+        if (m) {
+            if (current) blocks.push(current);
+            current = { a: m[1].toUpperCase(), b: m[2].toUpperCase(), correct: [], incorrect: [] };
+            continue;
+        }
+        if (!current) continue;
+        const correctIdx = line.indexOf('Правильні:');
+        const incorrectIdx = line.indexOf('Неправильні:');
+        if (correctIdx !== -1) {
+            const part = line.slice(correctIdx + 'Правильні:'.length);
+            current.correct.push(...parseWordList(part));
+        }
+        if (incorrectIdx !== -1) {
+            const part = line.slice(incorrectIdx + 'Неправильні:'.length);
+            current.incorrect.push(...parseWordList(part));
+        }
+    }
+    if (current) blocks.push(current);
+    return blocks;
+}
+
+export async function loadDifferentiationFromFile(path = 'words/Диференціація.txt') {
+    try {
+        const res = await fetch(path, { cache: 'no-cache' });
+        if (!res.ok) return false;
+        const text = await res.text();
+        const blocks = parseDifferentiationText(text);
+        blocks.forEach(({ a, b, correct, incorrect }) => {
+            const nameA = `Диференціація: ${a} ↔ ${b}`;
+            const nameB = `Диференціація: ${b} ↔ ${a}`;
+            // Для блоку "A-B": правильні слова належать A, неправильні — B
+            upsertDiffType(a, nameA, correct, incorrect);
+            // Зворотній напрям, якщо у файлі немає окремого блоку — сформуємо симетрично
+            if (!(wordSets[b]?.types?.[nameB])) {
+                upsertDiffType(b, nameB, incorrect, correct);
+            }
+        });
+        return true;
+    } catch (error) {
+        logError('wordSets.loadDifferentiationFromFile', error);
+        return false;
+    }
+}

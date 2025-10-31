@@ -2,6 +2,7 @@ import { createLoadingOverlay } from './ui/loadingOverlay.js';
 import { initRouter } from './router.js';
 import { logError } from './utils/logger.js';
 import { texts } from './data/texts.js';
+import { loadDifferentiationFromFile } from './data/wordSets.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     try {
@@ -18,6 +19,20 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch {}
 
         const loader = createLoadingOverlay(document.body);
+
+        // Preload differentiation datasets from text file (optional).
+        // This augments in-memory wordSets so all views see the new types.
+        (async () => {
+            try {
+                loader.show(texts.loader.preparing);
+                await loadDifferentiationFromFile();
+            } catch (e) {
+                logError('main.loadDifferentiation', e);
+            } finally {
+                loader.hide();
+            }
+        })();
+
         initRouter({
             appRoot,
             showLoader: loader.show,
