@@ -50,5 +50,10 @@ export function createSoundManager() {
             playTone({ frequency: 260, duration: 0.32, type: 'triangle', volume: 0.18 });
             setTimeout(() => playTone({ frequency: 196, duration: 0.36, type: 'sine', volume: 0.16 }), 120);
         },
+        playAttach() {
+            // Short mechanical "click" + light confirmation overtone
+            playTone({ frequency: 520, duration: 0.07, type: 'square', volume: 0.18, fade: true });
+            setTimeout(() => playTone({ frequency: 780, duration: 0.08, type: 'triangle', volume: 0.16, fade: true }), 40);
+        },
     };
 }

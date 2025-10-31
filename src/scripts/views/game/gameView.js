@@ -91,8 +91,8 @@ export default async function renderGame(appRoot, context) {
         stage.append(toolbar, message, footer);
         appRoot.append(stage);
 
-        const soundManager = createSoundManager();
-        trainManager = createTrainManager({ stageEl: stage, letter, typeData });
+    const soundManager = createSoundManager();
+    trainManager = createTrainManager({ stageEl: stage, letter, typeData, soundManager });
         await trainManager.init();
 
     const showStatus = status => {

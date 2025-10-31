@@ -9,7 +9,7 @@ const COUPLER_GAP = 12;
 const LOCK_SIZE = 32;
 const LOCK_HALF = LOCK_SIZE / 2;
 
-export function createTrainManager({ stageEl, letter, typeData }) {
+export function createTrainManager({ stageEl, letter, typeData, soundManager = null }) {
     const nodes = new Map();
     const locks = new Map();
     const teardownCallbacks = [];
@@ -463,6 +463,9 @@ export function createTrainManager({ stageEl, letter, typeData }) {
         dragNode.connections[dragSide] = targetNode.id;
         targetNode.connections[targetSide] = dragNode.id;
         createLock(dragNode, targetNode);
+        try {
+            soundManager?.playAttach?.();
+        } catch {}
     }
 
     // Align the dragged cluster so edges meet exactly at the seam (no overlap).
