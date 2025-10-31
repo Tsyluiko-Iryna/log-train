@@ -367,10 +367,13 @@ export function createTrainManager({ stageEl, letter, typeData }) {
                 return;
             }
             const dragGroupIds = Array.from(collectGroup(dragNode.id)).filter(id => id !== targetNode.id);
+            // Map seam side to actual connection sockets on drag/target:
+            // - 'left'  => drag goes LEFT of target => use drag.RIGHT -> target.LEFT
+            // - 'right' => drag goes RIGHT of target => use drag.LEFT  -> target.RIGHT
             if (candidate.side === 'left') {
-                connectNodes(dragNode, targetNode, 'left', 'right', dragGroupIds);
-            } else {
                 connectNodes(dragNode, targetNode, 'right', 'left', dragGroupIds);
+            } else {
+                connectNodes(dragNode, targetNode, 'left', 'right', dragGroupIds);
             }
         } catch (error) {
             logError('train.applyAttachment', error);
