@@ -20,6 +20,11 @@ export function initRouter({ appRoot, showLoader, hideLoader, updateProgress }) 
     let currentCleanup = null;
     let isNavigating = false;
 
+    // Fallback no-op handlers to improve robustness if not provided
+    showLoader = typeof showLoader === 'function' ? showLoader : () => {};
+    hideLoader = typeof hideLoader === 'function' ? hideLoader : () => {};
+    updateProgress = typeof updateProgress === 'function' ? updateProgress : () => {};
+
     const context = {
         showLoader,
         hideLoader,
@@ -33,10 +38,15 @@ export function initRouter({ appRoot, showLoader, hideLoader, updateProgress }) 
     async function renderRoute(routeName) {
         try {
             isNavigating = true;
-            showLoader(texts.loader.pageLoading);
+            showLoader(texts?.loader?.pageLoading || 'Loading...');
             if (currentCleanup) {
-                currentCleanup();
-                currentCleanup = null;
+                try {
+                    await Promise.resolve(currentCleanup());
+                } catch (cleanupErr) {
+                    logError('router.cleanup', cleanupErr);
+                } finally {
+                    currentCleanup = null;
+                }
             }
             const loadModule = ROUTE_LOADERS[routeName] || ROUTE_LOADERS.home;
             const module = await loadModule();
