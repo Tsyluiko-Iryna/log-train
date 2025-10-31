@@ -287,7 +287,8 @@ export default function renderHome(appRoot, context) {
                     return;
                 }
                 setTextContent(typeLabel, texts.selectors.lexicalTypeLabel || texts.selectors.typeLabel);
-                const filtered = types.filter(name => !/^Звук\s/.test(name));
+                // Exclude phonemic-position and differentiation types from lexical list
+                const filtered = types.filter(name => !/^Звук\s/.test(name) && !/^Диференціація/.test(name));
                 filtered.forEach(typeName => {
                     const button = createElement('button', {
                         text: typeName,
