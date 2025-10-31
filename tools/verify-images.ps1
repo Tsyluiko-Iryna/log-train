@@ -11,9 +11,10 @@ $imgDir = Join-Path $repo 'src\images'
 $words = New-Object System.Collections.Generic.HashSet[string]
 
 function Collect-Words([string]$file) {
-  $txt = Get-Content -LiteralPath $file -Raw
+  $txt = Get-Content -LiteralPath $file -Raw -Encoding UTF8
   $rxArr = New-Object System.Text.RegularExpressions.Regex('(?:correct|incorrect)\s*:\s*\[(.*?)\]','Singleline')
-  $rxStr = New-Object System.Text.RegularExpressions.Regex("'([^']+)'",'Singleline')
+  # Use double-quoted PowerShell string for regex so inner single quotes parse correctly in PS 5.1
+  $rxStr = New-Object System.Text.RegularExpressions.Regex("'([^']+)'","Singleline")
   foreach ($m in $rxArr.Matches($txt)) {
     foreach ($m2 in $rxStr.Matches($m.Groups[1].Value)) {
       [void]$words.Add($m2.Groups[1].Value)
@@ -27,6 +28,8 @@ Collect-Words -file $pairs
 function Normalize([string]$w) {
   $n = $w.ToLower().Replace(' ', '')
   if ($n -eq 'жираф') { return 'жирафа.png' }
+  # Fallback in case input normalization yields the filename directly
+  if ((($n + '.png')) -eq 'жираф.png') { return 'жирафа.png' }
   return ($n + '.png')
 }
 
