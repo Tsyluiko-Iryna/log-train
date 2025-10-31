@@ -128,7 +128,7 @@ button:active:not(:disabled) {
 }
 
 .home-header__title {
-    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    font-size: clamp(1.9rem, 4.2vw, 2.6rem);
     font-weight: 800;
     letter-spacing: 0.04em;
     color: var(--color-text-primary);
@@ -136,7 +136,7 @@ button:active:not(:disabled) {
 
 .home-header__subtitle {
     max-width: 640px;
-    font-size: clamp(0.92rem, 1.6vw, 1.02rem);
+    font-size: clamp(0.96rem, 1.8vw, 1.08rem);
     color: var(--color-text-secondary);
     line-height: 1.55;
 }
@@ -150,6 +150,8 @@ button:active:not(:disabled) {
     padding: clamp(0.95rem, 2vh, 1.45rem);
     border-radius: 18px;
     box-shadow: var(--shadow-soft);
+    /* Ensure inner visual never spills beyond rounded corners */
+    overflow: hidden;
 }
 
 .game-card__visual {
@@ -173,7 +175,7 @@ button:active:not(:disabled) {
 @media (min-width: 900px) {
     /* Limit promo visual column width on wide screens to keep image modest */
     .game-card {
-        grid-template-columns: 420px 1fr;
+        grid-template-columns: 360px 1fr;
     }
 }
 
@@ -187,6 +189,7 @@ button:active:not(:disabled) {
     margin: 0;
     font-weight: 800;
     color: var(--color-text-primary);
+    font-size: clamp(1rem, 1.6vw, 1.1rem);
 }
 
 .game-card__title {
@@ -210,6 +213,7 @@ button:active:not(:disabled) {
 .selector-section__label {
     font-weight: 700;
     color: var(--color-text-secondary);
+    font-size: clamp(1rem, 1.6vw, 1.1rem);
 }
 
 .selector-grid {
@@ -234,6 +238,11 @@ button:active:not(:disabled) {
     display: flex;
     justify-content: center;
     padding-top: clamp(0.3rem, 1vh, 0.6rem);
+}
+
+.home-actions button {
+    font-size: 1.06rem;
+    padding: 0.72rem 1.5rem;
 }
 
 .home-summary {

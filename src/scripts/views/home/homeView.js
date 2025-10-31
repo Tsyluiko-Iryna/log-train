@@ -37,8 +37,7 @@ export default function renderHome(appRoot, context) {
     cardBody.append(cardTitle, cardTagline, cardDescription);
         gameCard.append(visual, cardBody);
 
-        // LEXICAL SECTION
-        const lexicalHeader = createElement('h3', { classes: 'selector-section__label', text: texts.selectors.lexicalTitle });
+    // LEXICAL SECTION (title label only)
         const selectorsWrapper = createElement('section', { classes: 'selector-section' });
         const letterLabel = createElement('div', { classes: 'selector-section__label', text: texts.selectors.lexicalLetterLabel || texts.selectors.letterLabel });
         const letterGrid = createElement('div', { classes: 'selector-grid' });
@@ -49,15 +48,9 @@ export default function renderHome(appRoot, context) {
         const typeGrid = createElement('div', { classes: 'selector-grid' });
         typeWrapper.append(typeLabel, typeGrid);
 
-        const actions = createElement('div', { classes: 'home-actions' });
-        const startButtonLexical = createElement('button', {
-            text: texts.selectors.startLexical || texts.selectors.startButton,
-            attrs: { type: 'button', disabled: 'true' },
-        });
-        actions.append(startButtonLexical);
+        // We'll add a single Start button after both sections below
 
-        // PHONEMIC SECTION
-        const phonHeader = createElement('h3', { classes: 'selector-section__label', text: texts.selectors.phonemicTitle });
+    // PHONEMIC SECTION (title label only)
         const selectorsWrapperPh = createElement('section', { classes: 'selector-section' });
         const letterLabelPh = createElement('div', { classes: 'selector-section__label', text: texts.selectors.phonemicLetterLabel || texts.selectors.letterLabel });
         const letterGridPh = createElement('div', { classes: 'selector-grid' });
@@ -68,12 +61,12 @@ export default function renderHome(appRoot, context) {
         const typeGridPh = createElement('div', { classes: 'selector-grid' });
         typeWrapperPh.append(typeLabelPh, typeGridPh);
 
-        const actionsPh = createElement('div', { classes: 'home-actions' });
-        const startButtonPh = createElement('button', {
-            text: texts.selectors.startPhonemic || texts.selectors.startButton,
+        const actionsUnified = createElement('div', { classes: 'home-actions' });
+        const startButton = createElement('button', {
+            text: texts.selectors.startButton,
             attrs: { type: 'button', disabled: 'true' },
         });
-        actionsPh.append(startButtonPh);
+        actionsUnified.append(startButton);
 
         const summary = createElement('p', {
             classes: 'home-summary',
@@ -95,14 +88,12 @@ export default function renderHome(appRoot, context) {
         container.append(
             header,
             gameCard,
-            lexicalHeader,
             selectorsWrapper,
             typeWrapper,
-            actions,
-            phonHeader,
+            // unified start button placed after both sections
             selectorsWrapperPh,
             typeWrapperPh,
-            actionsPh,
+            actionsUnified,
             summary,
             gameStyleFooter
         );
@@ -117,10 +108,12 @@ export default function renderHome(appRoot, context) {
     let selectedType = null;   // lexical
     let selectedLetterPh = null; // phonemic
     let selectedTypePh = null;   // phonemic
+    let activeSection = null; // 'lex' | 'ph'
 
-        function refreshStartButtons() {
-            startButtonLexical.disabled = !(selectedLetter && selectedType);
-            startButtonPh.disabled = !(selectedLetterPh && selectedTypePh);
+        function refreshStartButton() {
+            const readyLex = Boolean(selectedLetter && selectedType);
+            const readyPh = Boolean(selectedLetterPh && selectedTypePh);
+            startButton.disabled = !(readyLex || readyPh);
         }
 
         function handleLetterClick(event) {
@@ -134,7 +127,7 @@ export default function renderHome(appRoot, context) {
                 button.classList.add('is-active');
 
                 populateTypesLexical(letter);
-                refreshStartButtons();
+                refreshStartButton();
             } catch (error) {
                 logError('home.handleLetterClick', error);
             }
@@ -145,10 +138,13 @@ export default function renderHome(appRoot, context) {
                 const button = event.currentTarget;
                 const type = button.dataset.type;
                 selectedType = type;
-
                 Array.from(typeGrid.children).forEach(child => child.classList.remove('is-active'));
                 button.classList.add('is-active');
-                refreshStartButtons();
+                // Clear selection in the other section so only one theme is chosen overall
+                selectedTypePh = null;
+                Array.from(typeGridPh.children).forEach(child => child.classList.remove('is-active'));
+                activeSection = 'lex';
+                refreshStartButton();
             } catch (error) {
                 logError('home.handleTypeClick', error);
             }
@@ -165,7 +161,7 @@ export default function renderHome(appRoot, context) {
                 button.classList.add('is-active');
 
                 populateTypesPhon(letter);
-                refreshStartButtons();
+                refreshStartButton();
             } catch (error) {
                 logError('home.handleLetterClickPh', error);
             }
@@ -176,10 +172,13 @@ export default function renderHome(appRoot, context) {
                 const button = event.currentTarget;
                 const type = button.dataset.type;
                 selectedTypePh = type;
-
                 Array.from(typeGridPh.children).forEach(child => child.classList.remove('is-active'));
                 button.classList.add('is-active');
-                refreshStartButtons();
+                // Clear selection in the other section so only one theme is chosen overall
+                selectedType = null;
+                Array.from(typeGrid.children).forEach(child => child.classList.remove('is-active'));
+                activeSection = 'ph';
+                refreshStartButton();
             } catch (error) {
                 logError('home.handleTypeClickPh', error);
             }
@@ -276,38 +275,27 @@ export default function renderHome(appRoot, context) {
 
         const handleStartClick = () => {
             try {
-                if (!selectedLetter || !selectedType) {
-                    return;
-                }
+                const readyLex = selectedLetter && selectedType;
+                const readyPh = selectedLetterPh && selectedTypePh;
+                if (!(readyLex || readyPh)) return;
+
+                const useLex = activeSection === 'lex' ? true : (activeSection === 'ph' ? false : readyLex && !readyPh);
+                const letter = useLex ? selectedLetter : selectedLetterPh;
+                const type = useLex ? selectedType : selectedTypePh;
+
                 context.showLoader(texts.loader.preparing);
-                setSelection({ letter: selectedLetter, type: selectedType });
+                setSelection({ letter, type });
                 context.navigate('game');
             } catch (error) {
                 logError('home.start', error);
             }
         };
-
-        const handleStartClickPh = () => {
-            try {
-                if (!selectedLetterPh || !selectedTypePh) {
-                    return;
-                }
-                context.showLoader(texts.loader.preparing);
-                setSelection({ letter: selectedLetterPh, type: selectedTypePh });
-                context.navigate('game');
-            } catch (error) {
-                logError('home.startPh', error);
-            }
-        };
-
-        startButtonLexical.addEventListener('click', handleStartClick);
-        disposables.push(() => startButtonLexical.removeEventListener('click', handleStartClick));
-        startButtonPh.addEventListener('click', handleStartClickPh);
-        disposables.push(() => startButtonPh.removeEventListener('click', handleStartClickPh));
+        startButton.addEventListener('click', handleStartClick);
+        disposables.push(() => startButton.removeEventListener('click', handleStartClick));
 
     populateLetters();
     populateLettersPh();
-    refreshStartButtons();
+    refreshStartButton();
     } catch (error) {
         logError('home.render', error);
     }
