@@ -1,4 +1,5 @@
 import { logError } from './utils/logger.js';
+import { texts } from './data/texts.js';
 
 const ROUTE_LOADERS = {
     home: () => import('./views/home/homeView.js'),
@@ -32,7 +33,7 @@ export function initRouter({ appRoot, showLoader, hideLoader, updateProgress }) 
     async function renderRoute(routeName) {
         try {
             isNavigating = true;
-            showLoader('Завантаження сторінки…');
+            showLoader(texts.loader.pageLoading);
             if (currentCleanup) {
                 currentCleanup();
                 currentCleanup = null;

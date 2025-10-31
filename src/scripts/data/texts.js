@@ -1,5 +1,6 @@
 export const texts = {
     siteTitle: 'Логопедичні ігри',
+    noscript: 'Для роботи застосунку потрібно увімкнути JavaScript.',
     gameCard: {
         title: 'Потяг',
         description: 'Гра для розвитку вимови: зберіть потяг із правильних вагончиків, потім дайте відповіді на запитання та пройдіть тест на пам’ять.',
@@ -9,10 +10,16 @@ export const texts = {
         letterLabel: 'Оберіть літеру для тренування',
         typeLabel: 'Оберіть тему слів',
         startButton: 'Почати гру',
+        noOptionsNote: '(немає варіантів)',
     },
     loader: {
         preparing: 'Готуємо дані…',
         fetchingAssets: 'Завантажуємо зображення…',
+        pageLoading: 'Завантаження сторінки…',
+        loading: 'Завантаження…',
+    },
+    images: {
+        trainAlt: 'Потяг',
     },
     game: {
         back: 'Назад',
@@ -46,4 +53,7 @@ export const texts = {
         back: 'Назад',
     },
     legal: '© 2025. Усі права захищено.',
+    errors: {
+        assetLoadFailed: fileName => `Не вдалося завантажити ${fileName}`,
+    },
 };

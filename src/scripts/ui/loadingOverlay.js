@@ -1,4 +1,5 @@
 import { createElement, setTextContent } from '../utils/dom.js';
+import { texts } from '../data/texts.js';
 import { logError } from '../utils/logger.js';
 
 export function createLoadingOverlay(parent = document.body) {
@@ -6,7 +7,7 @@ export function createLoadingOverlay(parent = document.body) {
         const overlay = createElement('div', { classes: 'loader-overlay' });
         const box = createElement('div', { classes: 'loader-box' });
         const spinner = createElement('div', { classes: 'loader-spinner' });
-        const text = createElement('div', { classes: 'loader-text', text: 'Завантаження…' });
+    const text = createElement('div', { classes: 'loader-text', text: texts.loader.loading });
         const progress = createElement('div', { classes: 'loader-progress', text: '' });
 
         box.append(spinner, text, progress);

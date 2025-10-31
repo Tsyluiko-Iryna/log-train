@@ -1,4 +1,5 @@
 import { logError } from '../utils/logger.js';
+import { texts } from '../data/texts.js';
 import { getImageUrl } from '../utils/assets.js';
 
 export async function preloadImages(fileNames, { onProgress } = {}) {
@@ -21,7 +22,7 @@ export async function preloadImages(fileNames, { onProgress } = {}) {
                 resolve({ fileName, status: 'loaded' });
             };
             img.onerror = () => {
-                logError('assetLoader.preloadImages', new Error(`Не вдалося завантажити ${fileName}`));
+                logError('assetLoader.preloadImages', new Error(texts.errors.assetLoadFailed(fileName)));
                 update();
                 resolve({ fileName, status: 'error' });
             };

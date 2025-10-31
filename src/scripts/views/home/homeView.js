@@ -24,7 +24,7 @@ export default function renderHome(appRoot, context) {
         const visualImg = createElement('img', {
             attrs: {
                 src: getImageUrl('potyah.png'),
-                alt: 'Потяг',
+                alt: texts.images.trainAlt,
                 loading: 'lazy',
             },
         });
@@ -133,7 +133,7 @@ export default function renderHome(appRoot, context) {
                 clearElement(typeGrid);
                 const types = listTypes(letter);
                 if (!types.length) {
-                    setTextContent(typeLabel, `${texts.selectors.typeLabel} (немає варіантів)`);
+                    setTextContent(typeLabel, `${texts.selectors.typeLabel} ${texts.selectors.noOptionsNote}`);
                     return;
                 }
                 setTextContent(typeLabel, texts.selectors.typeLabel);

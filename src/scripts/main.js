@@ -1,6 +1,7 @@
 import { createLoadingOverlay } from './ui/loadingOverlay.js';
 import { initRouter } from './router.js';
 import { logError } from './utils/logger.js';
+import { texts } from './data/texts.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     try {
@@ -9,7 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error('App root not found');
         }
 
-    const loader = createLoadingOverlay(document.body);
+        // Ensure document title comes from centralized texts
+        try {
+            if (texts?.siteTitle) {
+                document.title = texts.siteTitle;
+            }
+        } catch {}
+
+        const loader = createLoadingOverlay(document.body);
         initRouter({
             appRoot,
             showLoader: loader.show,
