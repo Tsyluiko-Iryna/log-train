@@ -1,6 +1,6 @@
 import { logError } from './logger.js';
 
-export function attachHeightScaler(element, { margin = 32, minScale = 0.6, widthOffset = 0 } = {}) {
+export function attachHeightScaler(element, { margin = 32, minScale = 0.6, widthOffset = 0, animate = true, duration = 220 } = {}) {
     if (!element) {
         return { dispose() {} };
     }
@@ -9,6 +9,14 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
     let currentScale = 1;
     let baseWidth = null;
     let baseMaxWidth = null;
+    let didFirstApply = false;
+
+    // Animation state
+    let animRaf = null;
+    let animFrom = 1;
+    let animTo = 1;
+    let animStart = 0;
+    let animDuration = duration;
 
     let resizeObserver = null;
     if (typeof ResizeObserver === 'function') {
@@ -30,7 +38,6 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
 
     function applyScale() {
         try {
-            element.style.transform = 'none';
             if (baseWidth === null) {
                 baseWidth = element.offsetWidth;
             }
@@ -51,31 +58,93 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
 
             const available = Math.max(window.innerHeight - margin, 0);
             const nextScale = Math.min(1, Math.max(minScale, available / fullHeight));
-            currentScale = nextScale;
             element.style.transformOrigin = 'top center';
 
-            if (currentScale < 0.999) {
-                element.style.transform = `scale(${currentScale})`;
-                if (baseWidth) {
-                    const targetWidth = (baseWidth + widthOffset) / currentScale;
-                    element.style.width = `${targetWidth}px`;
-                }
-                if (baseMaxWidth) {
-                    const targetMaxWidth = (baseMaxWidth + widthOffset) / currentScale;
-                    element.style.maxWidth = `${targetMaxWidth}px`;
-                }
-            } else {
-                currentScale = 1;
-                element.style.transform = 'scale(1)';
-                element.style.width = '';
-                element.style.maxWidth = '';
+            // Cancel any running animation if target changes significantly
+            if (animRaf) {
+                cancelAnimationFrame(animRaf);
+                animRaf = null;
             }
 
-            element.dataset.scale = String(currentScale);
+            const applyAt = (scale) => {
+                if (scale < 0.999) {
+                    element.style.transform = `scale(${scale})`;
+                    if (baseWidth) {
+                        const targetWidth = (baseWidth + widthOffset) / scale;
+                        element.style.width = `${targetWidth}px`;
+                    }
+                    if (baseMaxWidth) {
+                        const targetMaxWidth = (baseMaxWidth + widthOffset) / scale;
+                        element.style.maxWidth = `${targetMaxWidth}px`;
+                    }
+                } else {
+                    element.style.transform = 'scale(1)';
+                    element.style.width = '';
+                    element.style.maxWidth = '';
+                    scale = 1;
+                }
+                currentScale = scale;
+                element.dataset.scale = String(currentScale);
+            };
+
+            // First paint: render at final scale, then reveal to avoid visible jump
+            if (!didFirstApply) {
+                applyAt(nextScale);
+                if (element.style.opacity === '') {
+                    // If author CSS doesn't set opacity, we can fade in gently
+                    element.style.opacity = '1';
+                }
+                didFirstApply = true;
+                return;
+            }
+
+            if (!animate) {
+                applyAt(nextScale);
+                return;
+            }
+
+            const delta = Math.abs(nextScale - currentScale);
+            if (delta < 0.01) {
+                // Tiny change – apply directly to avoid micro-jitters
+                applyAt(nextScale);
+                return;
+            }
+
+            // Smoothly animate scale to reduce abrupt "jump"
+            animFrom = currentScale;
+            animTo = nextScale;
+            animStart = performance.now();
+            animDuration = duration;
+
+            const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+            const step = (now) => {
+                const t = Math.min(1, (now - animStart) / animDuration);
+                const eased = easeOutCubic(t);
+                const s = animFrom + (animTo - animFrom) * eased;
+                applyAt(s);
+                if (t < 1) {
+                    animRaf = requestAnimationFrame(step);
+                } else {
+                    animRaf = null;
+                }
+            };
+            animRaf = requestAnimationFrame(step);
         } catch (error) {
             logError('attachHeightScaler.applyScale', error);
         }
     }
+
+    // Hide initially to prevent first-frame size pop, then reveal on first apply
+    try {
+        if (!element.style.opacity) {
+            element.style.opacity = '0';
+            // Reveal will happen in first apply
+            requestAnimationFrame(() => {
+                // Ensure opacity transition is smooth if author CSS defines it
+                element.style.opacity = '1';
+            });
+        }
+    } catch {}
 
     schedule();
 
@@ -85,6 +154,10 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
                 if (frame) {
                     cancelAnimationFrame(frame);
                 }
+                if (animRaf) {
+                    cancelAnimationFrame(animRaf);
+                    animRaf = null;
+                }
                 if (resizeObserver) {
                     resizeObserver.disconnect();
                 }
@@ -93,6 +166,7 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
                 element.style.removeProperty('transform-origin');
                 element.style.width = '';
                 element.style.maxWidth = '';
+                element.style.removeProperty('opacity');
                 delete element.dataset.scale;
             } catch (error) {
                 logError('attachHeightScaler.dispose', error);
