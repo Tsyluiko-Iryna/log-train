@@ -371,27 +371,28 @@ export function createTrainManager({ stageEl, letter, typeData }) {
             // - 'left'  => drag goes LEFT of target => use drag.RIGHT -> target.LEFT
             // - 'right' => drag goes RIGHT of target => use drag.LEFT  -> target.RIGHT
             if (candidate.side === 'left') {
-                connectNodes(dragNode, targetNode, 'right', 'left', dragGroupIds);
+                connectNodes(dragNode, targetNode, 'right', 'left', dragGroupIds, 'left');
             } else {
-                connectNodes(dragNode, targetNode, 'left', 'right', dragGroupIds);
+                connectNodes(dragNode, targetNode, 'left', 'right', dragGroupIds, 'right');
             }
         } catch (error) {
             logError('train.applyAttachment', error);
         }
     }
 
-    function connectNodes(dragNode, targetNode, dragSide, targetSide, dragGroupIds = [dragNode.id]) {
+    function connectNodes(dragNode, targetNode, dragSide, targetSide, dragGroupIds = [dragNode.id], attachmentSide = null) {
         if (dragNode.connections[dragSide] || targetNode.connections[targetSide]) {
             return;
         }
-        alignGroupToTarget(dragGroupIds, dragNode, targetNode, dragSide);
+        const placementSide = attachmentSide ?? (dragSide === 'right' ? 'left' : 'right');
+        alignGroupToTarget(dragGroupIds, dragNode, targetNode, placementSide);
         dragNode.connections[dragSide] = targetNode.id;
         targetNode.connections[targetSide] = dragNode.id;
         createLock(dragNode, targetNode);
     }
 
     // Align the dragged cluster so edges meet exactly at the seam (no overlap).
-    function alignGroupToTarget(dragGroupIds, dragNode, targetNode, dragSide) {
+    function alignGroupToTarget(dragGroupIds, dragNode, targetNode, placementSide) {
         updateBounds();
         const groupNodes = dragGroupIds.map(id => nodes.get(id)).filter(Boolean);
         if (!groupNodes.length) {
@@ -404,7 +405,7 @@ export function createTrainManager({ stageEl, letter, typeData }) {
         const targetHeight = targetBox.bottom - targetBox.top;
 
         let newX;
-        if (dragSide === 'left') {
+        if (placementSide === 'left') {
             // Place dragged group to the immediate left of target: drag.right == target.left
             newX = targetBox.left - dragWidth;
         } else {
