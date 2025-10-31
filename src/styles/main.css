@@ -98,7 +98,10 @@ button:active:not(:disabled) {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    overflow: hidden;
+    /* Allow vertical scrolling when content has multiple sections */
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .home-container {
