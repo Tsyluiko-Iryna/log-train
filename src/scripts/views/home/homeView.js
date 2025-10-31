@@ -58,12 +58,19 @@ export default function renderHome(appRoot, context) {
             html: texts.siteSummary,
         });
 
-        const footer = createElement('footer', {
-            classes: 'home-footer',
+        // Footer tags like on game screen: author + legal in bottom-right
+        const gameStyleFooter = createElement('div', { classes: 'game-footer' });
+        const authorTag = createElement('div', {
+            classes: 'game-author-tag',
+            text: texts.game.authorPlaceholder,
+        });
+        const legalTag = createElement('div', {
+            classes: 'game-author-tag',
             text: texts.legal,
         });
+        gameStyleFooter.append(authorTag, legalTag);
 
-        container.append(header, gameCard, selectorsWrapper, typeWrapper, actions, summary, footer);
+        container.append(header, gameCard, selectorsWrapper, typeWrapper, actions, summary, gameStyleFooter);
         wrapper.append(container);
         appRoot.append(wrapper);
 
