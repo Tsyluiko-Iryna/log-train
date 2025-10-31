@@ -74,7 +74,8 @@ export default function renderHome(appRoot, context) {
         wrapper.append(container);
         appRoot.append(wrapper);
 
-    const scaler = attachHeightScaler(container, { margin: 16, minScale: 0.5, widthOffset: 10 });
+    // Disable animation to avoid layout thrashing when content height changes (e.g., long type names)
+    const scaler = attachHeightScaler(container, { margin: 16, minScale: 0.5, widthOffset: 10, animate: false });
         disposables.push(() => scaler.dispose());
 
         let selectedLetter = null;
