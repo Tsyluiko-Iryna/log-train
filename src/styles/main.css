@@ -177,7 +177,7 @@ button:active:not(:disabled) {
 @media (min-width: 900px) {
     /* Limit promo visual column width on wide screens to keep image modest */
     .game-card {
-        grid-template-columns: 306px 1fr;
+        grid-template-columns: 245px 1fr;
     }
 }
 
