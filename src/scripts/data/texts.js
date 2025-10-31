@@ -19,7 +19,7 @@ export const texts = {
         phonemicLetterLabel: 'Фонематичний слух — оберіть літеру',
         phonemicTypeLabel: 'Оберіть позицію звука',
     differentiationTitle: 'Диференціація',
-    differentiationLetterLabel: 'Оберіть букви',
+    differentiationLetterLabel: 'Обрати пару',
     differentiationTypeLabel: 'Оберіть типи',
     differentiationTopicLabel: 'Оберіть тему',
     differentiationPositionLabel: 'Оберіть позицію звука',
