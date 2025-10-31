@@ -11,6 +11,15 @@ export const texts = {
         letterLabel: 'Оберіть літеру для тренування',
         typeLabel: 'Оберіть тему слів',
         startButton: 'Почати гру',
+        // New sectioned home labels
+        lexicalTitle: 'Лексичні теми',
+        lexicalLetterLabel: 'Лексичні теми — оберіть літеру',
+        lexicalTypeLabel: 'Оберіть лексичну тему',
+        phonemicTitle: 'Фонематичний слух',
+        phonemicLetterLabel: 'Фонематичний слух — оберіть літеру',
+        phonemicTypeLabel: 'Оберіть позицію звука',
+        startLexical: 'Почати (лексичні теми)',
+        startPhonemic: 'Почати (фонематичний слух)',
         noOptionsNote: '(немає варіантів)',
     },
     loader: {

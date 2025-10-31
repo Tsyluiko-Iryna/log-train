@@ -37,22 +37,43 @@ export default function renderHome(appRoot, context) {
     cardBody.append(cardTitle, cardTagline, cardDescription);
         gameCard.append(visual, cardBody);
 
+        // LEXICAL SECTION
+        const lexicalHeader = createElement('h3', { classes: 'selector-section__label', text: texts.selectors.lexicalTitle });
         const selectorsWrapper = createElement('section', { classes: 'selector-section' });
-        const letterLabel = createElement('div', { classes: 'selector-section__label', text: texts.selectors.letterLabel });
+        const letterLabel = createElement('div', { classes: 'selector-section__label', text: texts.selectors.lexicalLetterLabel || texts.selectors.letterLabel });
         const letterGrid = createElement('div', { classes: 'selector-grid' });
         selectorsWrapper.append(letterLabel, letterGrid);
 
         const typeWrapper = createElement('section', { classes: 'selector-section' });
-        const typeLabel = createElement('div', { classes: 'selector-section__label', text: texts.selectors.typeLabel });
+        const typeLabel = createElement('div', { classes: 'selector-section__label', text: texts.selectors.lexicalTypeLabel || texts.selectors.typeLabel });
         const typeGrid = createElement('div', { classes: 'selector-grid' });
         typeWrapper.append(typeLabel, typeGrid);
 
         const actions = createElement('div', { classes: 'home-actions' });
-        const startButton = createElement('button', {
-            text: texts.selectors.startButton,
+        const startButtonLexical = createElement('button', {
+            text: texts.selectors.startLexical || texts.selectors.startButton,
             attrs: { type: 'button', disabled: 'true' },
         });
-        actions.append(startButton);
+        actions.append(startButtonLexical);
+
+        // PHONEMIC SECTION
+        const phonHeader = createElement('h3', { classes: 'selector-section__label', text: texts.selectors.phonemicTitle });
+        const selectorsWrapperPh = createElement('section', { classes: 'selector-section' });
+        const letterLabelPh = createElement('div', { classes: 'selector-section__label', text: texts.selectors.phonemicLetterLabel || texts.selectors.letterLabel });
+        const letterGridPh = createElement('div', { classes: 'selector-grid' });
+        selectorsWrapperPh.append(letterLabelPh, letterGridPh);
+
+        const typeWrapperPh = createElement('section', { classes: 'selector-section' });
+        const typeLabelPh = createElement('div', { classes: 'selector-section__label', text: texts.selectors.phonemicTypeLabel || texts.selectors.typeLabel });
+        const typeGridPh = createElement('div', { classes: 'selector-grid' });
+        typeWrapperPh.append(typeLabelPh, typeGridPh);
+
+        const actionsPh = createElement('div', { classes: 'home-actions' });
+        const startButtonPh = createElement('button', {
+            text: texts.selectors.startPhonemic || texts.selectors.startButton,
+            attrs: { type: 'button', disabled: 'true' },
+        });
+        actionsPh.append(startButtonPh);
 
         const summary = createElement('p', {
             classes: 'home-summary',
@@ -71,7 +92,20 @@ export default function renderHome(appRoot, context) {
         });
         gameStyleFooter.append(authorTag, legalTag);
 
-        container.append(header, gameCard, selectorsWrapper, typeWrapper, actions, summary, gameStyleFooter);
+        container.append(
+            header,
+            gameCard,
+            lexicalHeader,
+            selectorsWrapper,
+            typeWrapper,
+            actions,
+            phonHeader,
+            selectorsWrapperPh,
+            typeWrapperPh,
+            actionsPh,
+            summary,
+            gameStyleFooter
+        );
         wrapper.append(container);
         appRoot.append(wrapper);
 
@@ -79,12 +113,14 @@ export default function renderHome(appRoot, context) {
     const scaler = attachHeightScaler(container, { margin: 16, minScale: 0.5, widthOffset: 10, animate: false });
         disposables.push(() => scaler.dispose());
 
-        let selectedLetter = null;
-        let selectedType = null;
+    let selectedLetter = null; // lexical
+    let selectedType = null;   // lexical
+    let selectedLetterPh = null; // phonemic
+    let selectedTypePh = null;   // phonemic
 
-        function refreshStartButton() {
-            const ready = Boolean(selectedLetter && selectedType);
-            startButton.disabled = !ready;
+        function refreshStartButtons() {
+            startButtonLexical.disabled = !(selectedLetter && selectedType);
+            startButtonPh.disabled = !(selectedLetterPh && selectedTypePh);
         }
 
         function handleLetterClick(event) {
@@ -97,8 +133,8 @@ export default function renderHome(appRoot, context) {
                 Array.from(letterGrid.children).forEach(child => child.classList.remove('is-active'));
                 button.classList.add('is-active');
 
-                populateTypes(letter);
-                refreshStartButton();
+                populateTypesLexical(letter);
+                refreshStartButtons();
             } catch (error) {
                 logError('home.handleLetterClick', error);
             }
@@ -112,9 +148,40 @@ export default function renderHome(appRoot, context) {
 
                 Array.from(typeGrid.children).forEach(child => child.classList.remove('is-active'));
                 button.classList.add('is-active');
-                refreshStartButton();
+                refreshStartButtons();
             } catch (error) {
                 logError('home.handleTypeClick', error);
+            }
+        }
+
+        function handleLetterClickPh(event) {
+            try {
+                const button = event.currentTarget;
+                const letter = button.dataset.letter;
+                selectedLetterPh = letter;
+                selectedTypePh = null;
+
+                Array.from(letterGridPh.children).forEach(child => child.classList.remove('is-active'));
+                button.classList.add('is-active');
+
+                populateTypesPhon(letter);
+                refreshStartButtons();
+            } catch (error) {
+                logError('home.handleLetterClickPh', error);
+            }
+        }
+
+        function handleTypeClickPh(event) {
+            try {
+                const button = event.currentTarget;
+                const type = button.dataset.type;
+                selectedTypePh = type;
+
+                Array.from(typeGridPh.children).forEach(child => child.classList.remove('is-active'));
+                button.classList.add('is-active');
+                refreshStartButtons();
+            } catch (error) {
+                logError('home.handleTypeClickPh', error);
             }
         }
 
@@ -137,16 +204,36 @@ export default function renderHome(appRoot, context) {
             }
         }
 
-        function populateTypes(letter) {
+        function populateLettersPh() {
+            try {
+                clearElement(letterGridPh);
+                const letters = listLetters();
+                letters.forEach(letter => {
+                    const button = createElement('button', {
+                        text: letter,
+                        attrs: { type: 'button' },
+                        dataset: { letter },
+                    });
+                    button.addEventListener('click', handleLetterClickPh);
+                    disposables.push(() => button.removeEventListener('click', handleLetterClickPh));
+                    letterGridPh.append(button);
+                });
+            } catch (error) {
+                logError('home.populateLettersPh', error);
+            }
+        }
+
+        function populateTypesLexical(letter) {
             try {
                 clearElement(typeGrid);
                 const types = listTypes(letter);
                 if (!types.length) {
-                    setTextContent(typeLabel, `${texts.selectors.typeLabel} ${texts.selectors.noOptionsNote}`);
+                    setTextContent(typeLabel, `${(texts.selectors.lexicalTypeLabel || texts.selectors.typeLabel)} ${texts.selectors.noOptionsNote}`);
                     return;
                 }
-                setTextContent(typeLabel, texts.selectors.typeLabel);
-                types.forEach(typeName => {
+                setTextContent(typeLabel, texts.selectors.lexicalTypeLabel || texts.selectors.typeLabel);
+                const filtered = types.filter(name => !/^Звук\s/.test(name));
+                filtered.forEach(typeName => {
                     const button = createElement('button', {
                         text: typeName,
                         attrs: { type: 'button' },
@@ -157,7 +244,33 @@ export default function renderHome(appRoot, context) {
                     typeGrid.append(button);
                 });
             } catch (error) {
-                logError('home.populateTypes', error);
+                logError('home.populateTypesLexical', error);
+            }
+        }
+
+        function populateTypesPhon(letter) {
+            try {
+                clearElement(typeGridPh);
+                const all = listTypes(letter);
+                const wanted = ['Звук на початку', 'Звук в середині', 'Звук у кінці'];
+                const types = wanted.filter(t => all.includes(t));
+                if (!types.length) {
+                    setTextContent(typeLabelPh, `${(texts.selectors.phonemicTypeLabel || texts.selectors.typeLabel)} ${texts.selectors.noOptionsNote}`);
+                    return;
+                }
+                setTextContent(typeLabelPh, texts.selectors.phonemicTypeLabel || texts.selectors.typeLabel);
+                types.forEach(typeName => {
+                    const button = createElement('button', {
+                        text: typeName,
+                        attrs: { type: 'button' },
+                        dataset: { type: typeName },
+                    });
+                    button.addEventListener('click', handleTypeClickPh);
+                    disposables.push(() => button.removeEventListener('click', handleTypeClickPh));
+                    typeGridPh.append(button);
+                });
+            } catch (error) {
+                logError('home.populateTypesPhon', error);
             }
         }
 
@@ -174,11 +287,27 @@ export default function renderHome(appRoot, context) {
             }
         };
 
-        startButton.addEventListener('click', handleStartClick);
-        disposables.push(() => startButton.removeEventListener('click', handleStartClick));
+        const handleStartClickPh = () => {
+            try {
+                if (!selectedLetterPh || !selectedTypePh) {
+                    return;
+                }
+                context.showLoader(texts.loader.preparing);
+                setSelection({ letter: selectedLetterPh, type: selectedTypePh });
+                context.navigate('game');
+            } catch (error) {
+                logError('home.startPh', error);
+            }
+        };
 
-        populateLetters();
-        refreshStartButton();
+        startButtonLexical.addEventListener('click', handleStartClick);
+        disposables.push(() => startButtonLexical.removeEventListener('click', handleStartClick));
+        startButtonPh.addEventListener('click', handleStartClickPh);
+        disposables.push(() => startButtonPh.removeEventListener('click', handleStartClickPh));
+
+    populateLetters();
+    populateLettersPh();
+    refreshStartButtons();
     } catch (error) {
         logError('home.render', error);
     }
