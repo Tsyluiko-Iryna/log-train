@@ -30,10 +30,11 @@ export default function renderHome(appRoot, context) {
         });
         visual.append(visualImg);
 
-        const cardBody = createElement('div', { classes: 'game-card__body' });
-        const cardTitle = createElement('h2', { classes: 'game-card__title', text: texts.gameCard.title });
-        const cardDescription = createElement('p', { classes: 'game-card__description', text: texts.gameCard.description });
-        cardBody.append(cardTitle, cardDescription);
+    const cardBody = createElement('div', { classes: 'game-card__body' });
+    const cardTitle = createElement('h2', { classes: 'game-card__title', text: texts.gameCard.title });
+    const cardTagline = createElement('p', { classes: 'game-card__tagline', text: texts.gameCard.tagline });
+    const cardDescription = createElement('p', { classes: 'game-card__description', text: texts.gameCard.description });
+    cardBody.append(cardTitle, cardTagline, cardDescription);
         gameCard.append(visual, cardBody);
 
         const selectorsWrapper = createElement('section', { classes: 'selector-section' });

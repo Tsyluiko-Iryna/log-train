@@ -172,6 +172,12 @@ button:active:not(:disabled) {
     gap: 1rem;
 }
 
+.game-card__tagline {
+    margin: 0;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
 .game-card__title {
     font-size: clamp(1.4rem, 3vw, 1.8rem);
     font-weight: 700;
