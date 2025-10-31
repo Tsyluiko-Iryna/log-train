@@ -514,8 +514,19 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
         lock.dataset.b = nodeB.id;
         lock.addEventListener('click', handleLockClick);
         locks.set(key, lock);
-        stageEl.append(lock);
+        // Prevent the lock from animating from (0,0) to its first position.
+        // 1) Disable transition temporarily
+        // 2) Set transform to the correct coordinates before appending
+        // 3) Append to DOM, then re-enable transition on the next frame
+        try {
+            lock.style.transition = 'none';
+        } catch {}
         positionLock(lock, nodeA, nodeB);
+        stageEl.append(lock);
+        // Re-enable transition after insertion
+        try {
+            nextFrame().then(() => { lock.style.transition = ''; });
+        } catch {}
     }
 
     function handleLockClick(event) {
