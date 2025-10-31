@@ -407,7 +407,7 @@ button:active:not(:disabled) {
 .train-item {
     position: absolute;
     width: 160px;
-    height: 130px;
+    height: 160px;
     border-radius: 18px;
     background: var(--color-panel);
     border: 2px solid transparent;
@@ -520,7 +520,8 @@ button:active:not(:disabled) {
 .train-car {
     position: relative;
     width: 140px;
-    min-height: 120px;
+    height: 140px;
+    aspect-ratio: 1 / 1;
     border-radius: 16px;
     background: var(--color-panel);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
