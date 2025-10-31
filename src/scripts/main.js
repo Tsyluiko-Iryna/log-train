@@ -4,7 +4,7 @@ import { logError } from './utils/logger.js';
 import { texts } from './data/texts.js';
 import { loadDifferentiationFromFile } from './data/wordSets.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     try {
         const appRoot = document.getElementById('app');
         if (!appRoot) {
@@ -19,19 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch {}
 
         const loader = createLoadingOverlay(document.body);
-
-        // Preload differentiation datasets from text file (optional).
-        // This augments in-memory wordSets so all views see the new types.
-        (async () => {
-            try {
-                loader.show(texts.loader.preparing);
-                await loadDifferentiationFromFile();
-            } catch (e) {
-                logError('main.loadDifferentiation', e);
-            } finally {
-                loader.hide();
-            }
-        })();
+        try {
+            loader.show(texts.loader.preparing);
+            await loadDifferentiationFromFile();
+        } catch (e) {
+            logError('main.loadDifferentiation', e);
+        } finally {
+            loader.hide();
+        }
 
         initRouter({
             appRoot,
