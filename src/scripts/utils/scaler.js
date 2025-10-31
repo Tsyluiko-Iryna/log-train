@@ -38,9 +38,14 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
 
     function applyScale() {
         try {
-            if (baseWidth === null) {
+            // Recompute the element's natural width based on current transform scale to support window resizes
+            const rect = element.getBoundingClientRect();
+            if (rect && rect.width > 0 && currentScale > 0) {
+                baseWidth = rect.width / currentScale;
+            } else if (baseWidth === null) {
                 baseWidth = element.offsetWidth;
             }
+            // Max width can be derived from computed style once; if not set, fall back to current width
             if (baseMaxWidth === null) {
                 const maxWidthValue = window.getComputedStyle(element).maxWidth;
                 const parsed = parseFloat(maxWidthValue);

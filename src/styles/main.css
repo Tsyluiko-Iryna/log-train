@@ -262,6 +262,7 @@ button:active:not(:disabled) {
 .home-actions button {
     font-size: 1.06rem;
     padding: 0.72rem 1.5rem;
+    white-space: nowrap;
 }
 
 .home-summary {
@@ -437,7 +438,7 @@ button:active:not(:disabled) {
     position: absolute;
     inset: 1rem 1.5rem auto;
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: max-content 1fr max-content;
     align-items: center;
     gap: 1rem;
     padding: 0.75rem 1.25rem;
@@ -449,6 +450,8 @@ button:active:not(:disabled) {
 
 .game-toolbar__action {
     justify-self: stretch;
+    /* Prevent wrapping of action labels */
+    white-space: nowrap;
 }
 
 .game-toolbar__action--back {
@@ -467,6 +470,12 @@ button:active:not(:disabled) {
     text-align: center;
     font-weight: 600;
     color: var(--color-text-secondary);
+    /* Let middle cell shrink and ellipsize instead of pushing buttons */
+    min-width: 0;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .game-stage__message {
@@ -500,8 +509,9 @@ button:active:not(:disabled) {
 
 .train-item {
     position: absolute;
-    width: 160px;
-    height: 160px;
+    /* Responsive size that adapts to viewport width while capped */
+    width: clamp(104px, 16vw, 160px);
+    height: clamp(104px, 16vw, 160px);
     border-radius: 18px;
     background: var(--color-panel);
     border: 2px solid transparent;
@@ -626,8 +636,9 @@ button:active:not(:disabled) {
 
 .train-car {
     position: relative;
-    width: 140px;
-    height: 140px;
+    /* Responsive size to adapt to narrow windows */
+    width: clamp(96px, 14vw, 140px);
+    height: clamp(96px, 14vw, 140px);
     aspect-ratio: 1 / 1;
     border-radius: 16px;
     background: var(--color-panel);
@@ -847,6 +858,7 @@ button:active:not(:disabled) {
 .final-screen__actions button {
     font-size: 1.15rem;
     padding: 0.9rem 2.5rem;
+    white-space: nowrap;
 }
 
 .game-footer {
@@ -912,16 +924,39 @@ button:active:not(:disabled) {
         padding: 0.6rem;
     }
 
-    .train-item {
-        width: 140px;
-        height: 118px;
-    }
+    /* Sizes now handled by clamp above; keep media query for legacy overrides if any */
 
-    .train-car {
-        width: 120px;
-        height: 120px;
-    }
 
+/* Extra compression for narrow side-docked windows */
+@media (max-width: 640px) {
+    .game-toolbar {
+        inset: 0.75rem 0.75rem auto;
+        padding: 0.6rem 0.75rem;
+        gap: 0.6rem;
+    }
+    .question-panel {
+        top: 5.2rem;
+        left: 0.75rem;
+        width: calc(100% - 1.5rem);
+        padding: 1rem 1rem;
+    }
+    .memory-test {
+        left: 0.75rem;
+        right: 0.75rem;
+        top: 5.2rem;
+        bottom: 0.8rem;
+        padding: 0.9rem;
+        gap: 0.9rem;
+    }
+    .memory-test__grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.6rem;
+    }
+    .train-locked-area {
+        min-height: 180px;
+        padding: 0.6rem 0.75rem;
+    }
+}
     .train-locked-area {
         min-height: 200px;
         padding: 0.85rem 1rem;
