@@ -326,21 +326,24 @@ export function createTrainManager({ stageEl, letter, typeData }) {
         }
 
         const options = [];
-        const dragLeftCoupler = dragBox.left + COUPLER_GAP;
-        const dragRightCoupler = dragBox.right - COUPLER_GAP;
-        const targetLeftCoupler = targetBox.left + COUPLER_GAP;
-        const targetRightCoupler = targetBox.right - COUPLER_GAP;
+        // Evaluate seam distances instead of hidden "couplers" to ensure edge-to-edge snapping
+        const dragRightEdge = dragBox.right;
+        const dragLeftEdge = dragBox.left;
+        const targetLeftEdge = targetBox.left;
+        const targetRightEdge = targetBox.right;
 
+        // Drag on the left side of target (drag's right edge to target's left edge)
         if (dragNode.type !== 'cab' && !dragNode.connections.left && !targetNode.connections.right) {
             if (targetNode.type !== 'cab' || !targetNode.connections.right) {
-                const distance = Math.abs(dragLeftCoupler - targetRightCoupler);
+                const distance = Math.abs(dragRightEdge - targetLeftEdge);
                 if (distance < ATTACH_THRESHOLD) {
                     options.push({ side: 'left', score: distance });
                 }
             }
         }
+        // Drag on the right side of target (drag's left edge to target's right edge)
         if (!dragNode.connections.right && !targetNode.connections.left && targetNode.type !== 'cab') {
-            const distance = Math.abs(dragRightCoupler - targetLeftCoupler);
+            const distance = Math.abs(dragLeftEdge - targetRightEdge);
             if (distance < ATTACH_THRESHOLD) {
                 options.push({ side: 'right', score: distance });
             }
@@ -380,7 +383,7 @@ export function createTrainManager({ stageEl, letter, typeData }) {
         createLock(dragNode, targetNode);
     }
 
-    // Align the dragged cluster so its coupler overlaps the target before locking.
+    // Align the dragged cluster so edges meet exactly at the seam (no overlap).
     function alignGroupToTarget(dragGroupIds, dragNode, targetNode, dragSide) {
         updateBounds();
         const groupNodes = dragGroupIds.map(id => nodes.get(id)).filter(Boolean);
@@ -395,11 +398,11 @@ export function createTrainManager({ stageEl, letter, typeData }) {
 
         let newX;
         if (dragSide === 'left') {
-            const targetCouplerX = targetBox.right - COUPLER_GAP;
-            newX = targetCouplerX - COUPLER_GAP;
+            // Place dragged group to the immediate left of target: drag.right == target.left
+            newX = targetBox.left - dragWidth;
         } else {
-            const targetCouplerX = targetBox.left + COUPLER_GAP;
-            newX = targetCouplerX - (dragWidth - COUPLER_GAP);
+            // Place dragged group to the immediate right of target: drag.left == target.right
+            newX = targetBox.right;
         }
         let newY = targetBox.top + (targetHeight - dragHeight) / 2;
         newY = clamp(newY, 8, Math.max(state.bounds.height - dragHeight - 8, 0));
@@ -494,14 +497,14 @@ export function createTrainManager({ stageEl, letter, typeData }) {
         });
     }
 
-    // Place the lock halfway between the coupled wagons using their stored geometry.
+    // Place the lock at the seam center between the coupled wagons.
     function positionLock(lock, nodeA, nodeB) {
         const boxA = getNodeBox(nodeA);
         const boxB = getNodeBox(nodeB);
         const aIsLeft = boxA.centerX <= boxB.centerX;
-        const couplerAX = aIsLeft ? boxA.right - COUPLER_GAP : boxA.left + COUPLER_GAP;
-        const couplerBX = aIsLeft ? boxB.left + COUPLER_GAP : boxB.right - COUPLER_GAP;
-        const centerX = (couplerAX + couplerBX) / 2;
+        // Seam X is the touching edge between A and B
+        const seamX = aIsLeft ? boxA.right : boxB.right;
+        const centerX = seamX;
         const centerY = (boxA.centerY + boxB.centerY) / 2;
         lock.style.transform = `translate3d(${centerX - LOCK_HALF}px, ${centerY - LOCK_HALF}px, 0)`;
     }
