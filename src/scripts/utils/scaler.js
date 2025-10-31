@@ -1,6 +1,6 @@
 import { logError } from './logger.js';
 
-export function attachHeightScaler(element, { margin = 32, minScale = 0.6, widthOffset = 0, animate = true, duration = 220 } = {}) {
+export function attachHeightScaler(element, { margin = 32, minScale = 0.6, widthOffset = 0, animate = true, duration = 220, adjustWidth = true } = {}) {
     if (!element) {
         return { dispose() {} };
     }
@@ -74,18 +74,20 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
             const applyAt = (scale) => {
                 if (scale < 0.999) {
                     element.style.transform = `scale(${scale})`;
-                    if (baseWidth) {
+                    if (adjustWidth && baseWidth) {
                         const targetWidth = (baseWidth + widthOffset) / scale;
                         element.style.width = `${targetWidth}px`;
                     }
-                    if (baseMaxWidth) {
+                    if (adjustWidth && baseMaxWidth) {
                         const targetMaxWidth = (baseMaxWidth + widthOffset) / scale;
                         element.style.maxWidth = `${targetMaxWidth}px`;
                     }
                 } else {
                     element.style.transform = 'scale(1)';
-                    element.style.width = '';
-                    element.style.maxWidth = '';
+                    if (adjustWidth) {
+                        element.style.width = '';
+                        element.style.maxWidth = '';
+                    }
                     scale = 1;
                 }
                 currentScale = scale;

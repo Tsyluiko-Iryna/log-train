@@ -192,6 +192,14 @@ button:active:not(:disabled) {
     }
 }
 
+/* On short heights, reduce the visual aspect to save vertical space */
+@media (max-height: 820px) {
+    .game-card__visual { aspect-ratio: 16 / 9; }
+}
+@media (max-height: 640px) {
+    .game-card__visual { aspect-ratio: 2 / 1; }
+}
+
 .game-card__body {
     display: flex;
     flex-direction: column;

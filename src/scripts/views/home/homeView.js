@@ -107,7 +107,7 @@ export default function renderHome(appRoot, context) {
         appRoot.append(wrapper);
 
     // Disable animation to avoid layout thrashing when content height changes (e.g., long type names)
-    const scaler = attachHeightScaler(container, { margin: 16, minScale: 0.5, widthOffset: 10, animate: false });
+    const scaler = attachHeightScaler(container, { margin: 12, minScale: 0.45, widthOffset: 0, animate: false, adjustWidth: false });
         disposables.push(() => scaler.dispose());
 
     let selectedLetter = null; // common for lexical and positions
