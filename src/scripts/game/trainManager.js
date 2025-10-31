@@ -384,10 +384,12 @@ export function createTrainManager({ stageEl, letter, typeData }) {
         const targetRightEdge = targetBox.right;
 
         // Drag on the left side of target (place dragged group to the LEFT of target):
-        // connection uses drag.right -> target.left
-        if (dragNode.type !== 'cab' && !dragNode.connections.right && !targetNode.connections.left) {
-            // Do NOT allow placing anything in front (left) of the cab
-            if (targetNode.type !== 'cab') {
+        // Connection uses drag.right -> target.left
+        // - Wagons: allowed left of wagons; NOT allowed left of cab
+        // - Cab: allowed left of wagons (so its right socket couples to wagon's left); NOT allowed left of cab
+        if (!dragNode.connections.right && !targetNode.connections.left) {
+            const leftAllowed = (targetNode.type !== 'cab') && (dragNode.type === 'wagon' || dragNode.type === 'cab');
+            if (leftAllowed) {
                 const distance = Math.abs(dragRightEdge - targetLeftEdge);
                 if (distance < ATTACH_THRESHOLD) {
                     options.push({ side: 'left', score: distance });
@@ -395,9 +397,10 @@ export function createTrainManager({ stageEl, letter, typeData }) {
             }
         }
         // Drag on the right side of target (place dragged group to the RIGHT of target):
-        // connection uses drag.left -> target.right
+        // Connection uses drag.left -> target.right
+        // - Wagons: allowed to the right of both wagons and cab
+        // - Cab: NOT allowed to be placed to the right of anything (to keep wagons only on its right)
         if (dragNode.type !== 'cab' && !dragNode.connections.left && !targetNode.connections.right) {
-            // Allow attaching to the RIGHT of the cab (typical train growth direction)
             const distance = Math.abs(dragLeftEdge - targetRightEdge);
             if (distance < ATTACH_THRESHOLD) {
                 options.push({ side: 'right', score: distance });
