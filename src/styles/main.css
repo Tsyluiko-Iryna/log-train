@@ -166,10 +166,12 @@ button:active:not(:disabled) {
 
 .game-card__visual img {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    /* Bleed 1px to avoid subpixel gaps at top/bottom on some DPIs */
+    inset: -1px;
+    width: calc(100% + 2px);
+    height: calc(100% + 2px);
     object-fit: cover;
+    object-position: center;
 }
 
 @media (min-width: 900px) {
