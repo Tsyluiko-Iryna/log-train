@@ -411,10 +411,7 @@ button:active:not(:disabled) {
     border-radius: 18px;
     background: var(--color-panel);
     border: 2px solid transparent;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
+    display: block;
     /* make image fill the whole card; label will overlay on top */
     padding: 0;
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
@@ -422,6 +419,7 @@ button:active:not(:disabled) {
     touch-action: none;
     user-select: none;
     z-index: 10;
+    overflow: hidden;
 }
 
 .train-item__image {
@@ -445,8 +443,9 @@ button:active:not(:disabled) {
     letter-spacing: 0.02em;
     color: #ffffff;
     text-align: center;
-    background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0));
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
     border-radius: 8px;
+    pointer-events: none;
 }
 
 .train-item--cab .train-item__label {
@@ -476,9 +475,10 @@ button:active:not(:disabled) {
     background: #d4d4d2;
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: #555;
-    font-weight: 700;
+    /* image fills the card, label overlays */
+    padding: 0;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+    overflow: hidden;
     border: none;
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
     z-index: 18;
@@ -553,8 +553,9 @@ button:active:not(:disabled) {
     text-transform: capitalize;
     color: #ffffff;
     text-align: center;
-    background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0));
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
     border-radius: 8px;
+    pointer-events: none;
 }
 
 .train-car--cab .train-car__label {
@@ -684,8 +685,9 @@ button:active:not(:disabled) {
     color: #ffffff;
     line-height: 1.15;
     word-break: break-word;
-    background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0));
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
     border-radius: 8px;
+    pointer-events: none;
 }
 
 .memory-test__card:hover .memory-test__card-image {
