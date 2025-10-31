@@ -151,8 +151,8 @@ button:active:not(:disabled) {
 
 .game-card__visual {
     position: relative;
-    /* Make the promo image significantly smaller */
-    padding-top: clamp(22%, 26%, 32%);
+    /* Keep a fixed 4:3 aspect ratio */
+    padding-top: 75%;
     border-radius: 18px;
     overflow: hidden;
     background: linear-gradient(135deg, rgba(218, 163, 120, 0.32), rgba(111, 126, 193, 0.32));
