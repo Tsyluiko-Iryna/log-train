@@ -332,17 +332,21 @@ export function createTrainManager({ stageEl, letter, typeData }) {
         const targetLeftEdge = targetBox.left;
         const targetRightEdge = targetBox.right;
 
-        // Drag on the left side of target (drag's right edge to target's left edge)
-        if (dragNode.type !== 'cab' && !dragNode.connections.left && !targetNode.connections.right) {
-            if (targetNode.type !== 'cab' || !targetNode.connections.right) {
+        // Drag on the left side of target (place dragged group to the LEFT of target):
+        // connection uses drag.right -> target.left
+        if (dragNode.type !== 'cab' && !dragNode.connections.right && !targetNode.connections.left) {
+            // Do NOT allow placing anything in front (left) of the cab
+            if (targetNode.type !== 'cab') {
                 const distance = Math.abs(dragRightEdge - targetLeftEdge);
                 if (distance < ATTACH_THRESHOLD) {
                     options.push({ side: 'left', score: distance });
                 }
             }
         }
-        // Drag on the right side of target (drag's left edge to target's right edge)
-        if (!dragNode.connections.right && !targetNode.connections.left && targetNode.type !== 'cab') {
+        // Drag on the right side of target (place dragged group to the RIGHT of target):
+        // connection uses drag.left -> target.right
+        if (dragNode.type !== 'cab' && !dragNode.connections.left && !targetNode.connections.right) {
+            // Allow attaching to the RIGHT of the cab (typical train growth direction)
             const distance = Math.abs(dragLeftEdge - targetRightEdge);
             if (distance < ATTACH_THRESHOLD) {
                 options.push({ side: 'right', score: distance });
