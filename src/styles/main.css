@@ -871,7 +871,7 @@ button:active:not(:disabled) {
 }
 
 .game-footer {
-    position: absolute;
+    position: fixed;
     right: 1rem;
     bottom: 1rem;
     display: flex;
@@ -879,6 +879,7 @@ button:active:not(:disabled) {
     align-items: flex-end;
     gap: 0.6rem;
     z-index: 16;
+    pointer-events: none; /* don't block interactions underneath */
 }
 
 .game-author-tag {
