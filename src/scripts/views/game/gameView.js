@@ -60,8 +60,17 @@ export default async function renderGame(appRoot, context) {
             const acc = [];
             ids.forEach(id => {
                 const t = catalog.types[id];
-                if (t?.all?.length) {
-                    t.all.forEach(w => acc.push({ text: w.text, file: w.file }));
+                if (t?.correct?.length) {
+                    t.correct.forEach(w => acc.push({ text: w.text, file: w.file }));
+                }
+            });
+            return uniqByText(acc);
+        }
+        function allCorrectWordsGlobal() {
+            const acc = [];
+            Object.values(catalog.types).forEach(t => {
+                if (t?.correct?.length) {
+                    t.correct.forEach(w => acc.push({ text: w.text, file: w.file }));
                 }
             });
             return uniqByText(acc);
@@ -70,16 +79,31 @@ export default async function renderGame(appRoot, context) {
             const id = `${letter}|${typeName}`;
             const meta = catalog.types[id];
             if (!meta) {
-                const pool = allWords.filter(item => !correctWords.some(w => w.text === item.text));
+                // Fallback if meta missing: use global correct-only excluding current corrects
+                let pool = allCorrectWordsGlobal().filter(item => !correctWords.some(w => w.text === item.text));
                 return shuffle(pool).slice(0, needed);
             }
             let pool = [];
             if (meta.mode === 'lexical') {
                 const others = catalog.byLetter[letter]?.types?.lexical?.filter(tid => tid !== id) || [];
                 pool = wordsFromTypeIds(others);
+                if (pool.length < needed) {
+                    // Broaden to positions of same letter (still correct-only)
+                    const posIds = catalog.byLetter[letter]?.types?.positions || [];
+                    const extra = wordsFromTypeIds(posIds);
+                    const merged = [...pool, ...extra];
+                    pool = uniqByText(merged);
+                }
             } else if (meta.mode === 'position') {
                 const others = catalog.byLetter[letter]?.types?.positions?.filter(tid => tid !== id) || [];
                 pool = wordsFromTypeIds(others);
+                if (pool.length < needed) {
+                    // Broaden to lexical of same letter (correct-only)
+                    const lexIds = catalog.byLetter[letter]?.types?.lexical || [];
+                    const extra = wordsFromTypeIds(lexIds);
+                    const merged = [...pool, ...extra];
+                    pool = uniqByText(merged);
+                }
             } else if (meta.mode === 'diff') {
                 const [a, b] = (meta.pair || '').split('-');
                 const reverse = `${b}-${a}`;
@@ -87,12 +111,27 @@ export default async function renderGame(appRoot, context) {
                 const container = catalog.byLetter[b]?.pairs?.[reverse];
                 const ids = container ? (container[bucket] || []) : [];
                 pool = wordsFromTypeIds(ids);
+                if (pool.length < needed) {
+                    // Broaden to other bucket of the second letter
+                    const otherBucket = bucket === 'topics' ? 'positions' : 'topics';
+                    const ids2 = container ? (container[otherBucket] || []) : [];
+                    const extra = wordsFromTypeIds(ids2);
+                    pool = uniqByText([...pool, ...extra]);
+                }
+                if (pool.length < needed) {
+                    // As a last resort, include correct words from the primary letter (both modes)
+                    const lexIdsA = catalog.byLetter[a]?.types?.lexical || [];
+                    const posIdsA = catalog.byLetter[a]?.types?.positions || [];
+                    const extraA = wordsFromTypeIds([...lexIdsA, ...posIdsA]);
+                    pool = uniqByText([...pool, ...extraA]);
+                }
             }
             // exclude current correct words
             pool = pool.filter(item => !correctWords.some(w => w.text === item.text));
             if (pool.length < needed) {
-                const fallback = allWords.filter(item => !correctWords.some(w => w.text === item.text));
-                const extra = fallback.filter(x => !pool.some(p => p.text === x.text));
+                // Global correct-only fallback
+                const global = allCorrectWordsGlobal().filter(item => !correctWords.some(w => w.text === item.text));
+                const extra = global.filter(x => !pool.some(p => p.text === x.text));
                 pool = [...pool, ...extra];
             }
             return shuffle(pool).slice(0, needed);

@@ -34,7 +34,8 @@ export function createMemoryTest({ stageEl, letter, correctWagons, allWords, sou
         .filter(item => !correctSet.has(item.text))
         .slice(0, distractorCount);
 
-    const distractorPool = allWords.filter(item => !correctSet.has(item.text) && !preselected.some(sel => sel.text === item.text));
+    // Supplemental pool should only come from correct words of other groups, never from originally incorrect items
+    const distractorPool = allWords.filter(item => item.isCorrect && !correctSet.has(item.text) && !preselected.some(sel => sel.text === item.text));
     const missing = Math.max(distractorCount - preselected.length, 0);
     const supplemental = missing > 0 ? shuffle(distractorPool).slice(0, missing) : [];
     const effectiveDistractors = [...preselected, ...supplemental];
