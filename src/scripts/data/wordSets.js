@@ -342,10 +342,9 @@ function normalizeWordToken(token) {
 
 function parseWordList(segment) {
     // segment is the part after "Правильні:" або "Неправильні:"
-    return segment
-        .split(',')
-        .map(normalizeWordToken)
-        .filter(Boolean);
+    const primary = segment.split(',');
+    const tokens = primary.length > 1 ? primary : segment.split(/\s+/);
+    return tokens.map(normalizeWordToken).filter(Boolean);
 }
 
 function ensureLetterEntry(letter) {

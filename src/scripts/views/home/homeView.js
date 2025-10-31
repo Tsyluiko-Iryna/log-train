@@ -159,6 +159,9 @@ export default function renderHome(appRoot, context) {
                 // Clear selection in the other section so only one theme is chosen overall
                 selectedTypePh = null;
                 Array.from(typeGridPh.children).forEach(child => child.classList.remove('is-active'));
+                // Also clear differentiation section for exclusivity across three
+                selectedTypeDiff = null;
+                Array.from(typeGridDiff?.children || []).forEach(child => child.classList.remove('is-active'));
                 activeSection = 'lex';
                 refreshStartButton();
             } catch (error) {
@@ -193,6 +196,9 @@ export default function renderHome(appRoot, context) {
                 // Clear selection in the other section so only one theme is chosen overall
                 selectedType = null;
                 Array.from(typeGrid.children).forEach(child => child.classList.remove('is-active'));
+                // Also clear differentiation section
+                selectedTypeDiff = null;
+                Array.from(typeGridDiff?.children || []).forEach(child => child.classList.remove('is-active'));
                 activeSection = 'ph';
                 refreshStartButton();
             } catch (error) {
