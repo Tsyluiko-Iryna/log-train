@@ -164,9 +164,11 @@ button:active:not(:disabled) {
 .game-card__visual img {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    /* Make the image smaller but fully visible: center it and keep aspect ratio */
+    width: 80%;
+    height: 80%;
+    margin: auto;
+    object-fit: contain;
 }
 
 .game-card__body {
