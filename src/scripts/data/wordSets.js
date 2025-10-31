@@ -373,19 +373,31 @@ function parseDifferentiationText(text) {
         const m = line.match(headerRe);
         if (m) {
             if (current) blocks.push(current);
-            current = { a: m[1].toUpperCase(), b: m[2].toUpperCase(), correct: [], incorrect: [] };
+            current = { a: m[1].toUpperCase(), b: m[2].toUpperCase(), items: [] };
             continue;
         }
         if (!current) continue;
-        const correctIdx = line.indexOf('Правильні:');
-        const incorrectIdx = line.indexOf('Неправильні:');
+        // Expect pattern: "Label(.|:) Правильні: ... Неправильні: ..."
+        const labelMatch = line.match(/^([^\.:]+)\s*[\.:]\s*(.*)$/);
+        if (!labelMatch) continue;
+        const label = labelMatch[1].trim();
+        const rest = labelMatch[2];
+        const correctIdx = rest.indexOf('Правильні:');
+        const incorrectIdx = rest.indexOf('Неправильні:');
+        let correct = [];
+        let incorrect = [];
         if (correctIdx !== -1) {
-            const part = line.slice(correctIdx + 'Правильні:'.length);
-            current.correct.push(...parseWordList(part));
+            const after = rest.slice(correctIdx + 'Правильні:'.length);
+            // If there's also "Неправильні:" after, limit to that
+            const upto = incorrectIdx !== -1 ? rest.slice(correctIdx + 'Правильні:'.length, incorrectIdx) : after;
+            correct = parseWordList(upto);
         }
         if (incorrectIdx !== -1) {
-            const part = line.slice(incorrectIdx + 'Неправильні:'.length);
-            current.incorrect.push(...parseWordList(part));
+            const after = rest.slice(incorrectIdx + 'Неправильні:'.length);
+            incorrect = parseWordList(after);
+        }
+        if (correct.length || incorrect.length) {
+            current.items.push({ label, correct, incorrect });
         }
     }
     if (current) blocks.push(current);
@@ -398,15 +410,16 @@ export async function loadDifferentiationFromFile(path = 'words/Диференц
         if (!res.ok) return false;
         const text = await res.text();
         const blocks = parseDifferentiationText(text);
-        blocks.forEach(({ a, b, correct, incorrect }) => {
-            const nameA = `Диференціація: ${a} ↔ ${b}`;
-            const nameB = `Диференціація: ${b} ↔ ${a}`;
-            // Для блоку "A-B": правильні слова належать A, неправильні — B
-            upsertDiffType(a, nameA, correct, incorrect);
-            // Зворотній напрям, якщо у файлі немає окремого блоку — сформуємо симетрично
-            if (!(wordSets[b]?.types?.[nameB])) {
-                upsertDiffType(b, nameB, incorrect, correct);
-            }
+        blocks.forEach(({ a, b, items }) => {
+            items.forEach(({ label, correct, incorrect }) => {
+                const nameA = `Диференціація: ${a}-${b} — ${label}`;
+                const nameB = `Диференціація: ${b}-${a} — ${label}`;
+                upsertDiffType(a, nameA, correct, incorrect);
+                // якщо для B ще немає цього типу — створимо дзеркально
+                if (!(wordSets[b]?.types?.[nameB])) {
+                    upsertDiffType(b, nameB, incorrect, correct);
+                }
+            });
         });
         return true;
     } catch (error) {

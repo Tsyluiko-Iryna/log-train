@@ -62,15 +62,20 @@ export default function renderHome(appRoot, context) {
         typeWrapperPh.append(typeLabelPh, typeGridPh);
 
         // DIFFERENTIATION SECTION (title label only)
-        const selectorsWrapperDiff = createElement('section', { classes: 'selector-section' });
-        const letterLabelDiff = createElement('div', { classes: 'selector-section__label', text: texts.selectors.differentiationLetterLabel || texts.selectors.letterLabel });
-        const letterGridDiff = createElement('div', { classes: 'selector-grid' });
-        selectorsWrapperDiff.append(letterLabelDiff, letterGridDiff);
+    const selectorsWrapperDiff = createElement('section', { classes: 'selector-section' });
+    const pairLabelDiff = createElement('div', { classes: 'selector-section__label', text: texts.selectors.differentiationLetterLabel || texts.selectors.letterLabel });
+    const pairGridDiff = createElement('div', { classes: 'selector-grid' });
+    selectorsWrapperDiff.append(pairLabelDiff, pairGridDiff);
 
-        const typeWrapperDiff = createElement('section', { classes: 'selector-section' });
-        const typeLabelDiff = createElement('div', { classes: 'selector-section__label', text: texts.selectors.differentiationTypeLabel || texts.selectors.typeLabel });
-        const typeGridDiff = createElement('div', { classes: 'selector-grid' });
-        typeWrapperDiff.append(typeLabelDiff, typeGridDiff);
+    const typeWrapperDiffTopics = createElement('section', { classes: 'selector-section' });
+    const typeLabelDiffTopics = createElement('div', { classes: 'selector-section__label', text: texts.selectors.differentiationTopicLabel || texts.selectors.typeLabel });
+    const typeGridDiffTopics = createElement('div', { classes: 'selector-grid' });
+    typeWrapperDiffTopics.append(typeLabelDiffTopics, typeGridDiffTopics);
+
+    const typeWrapperDiffPositions = createElement('section', { classes: 'selector-section' });
+    const typeLabelDiffPositions = createElement('div', { classes: 'selector-section__label', text: texts.selectors.differentiationPositionLabel || texts.selectors.typeLabel });
+    const typeGridDiffPositions = createElement('div', { classes: 'selector-grid' });
+    typeWrapperDiffPositions.append(typeLabelDiffPositions, typeGridDiffPositions);
 
         const actionsUnified = createElement('div', { classes: 'home-actions' });
         const startButton = createElement('button', {
@@ -105,7 +110,8 @@ export default function renderHome(appRoot, context) {
             selectorsWrapperPh,
             typeWrapperPh,
             selectorsWrapperDiff,
-            typeWrapperDiff,
+            typeWrapperDiffTopics,
+            typeWrapperDiffPositions,
             actionsUnified,
             summary,
             gameStyleFooter
@@ -121,7 +127,8 @@ export default function renderHome(appRoot, context) {
     let selectedType = null;   // lexical
     let selectedLetterPh = null; // phonemic
     let selectedTypePh = null;   // phonemic
-    let selectedLetterDiff = null; // differentiation
+    let selectedPairDiff = null; // e.g., 'Р-Л'
+    let selectedLetterDiff = null; // first letter of pair
     let selectedTypeDiff = null;   // differentiation
     let activeSection = null; // 'lex' | 'ph' | 'diff'
 
@@ -206,15 +213,17 @@ export default function renderHome(appRoot, context) {
             }
         }
 
-        function handleLetterClickDiff(event) {
+        function handlePairClickDiff(event) {
             try {
                 const button = event.currentTarget;
-                const letter = button.dataset.letter;
-                selectedLetterDiff = letter;
+                const pair = button.dataset.pair;
+                selectedPairDiff = pair;
+                const [first] = pair.split('-');
+                selectedLetterDiff = first;
                 selectedTypeDiff = null;
-                Array.from(letterGridDiff.children).forEach(child => child.classList.remove('is-active'));
+                Array.from(pairGridDiff.children).forEach(child => child.classList.remove('is-active'));
                 button.classList.add('is-active');
-                populateTypesDiff(letter);
+                populateTypesDiff(pair);
                 refreshStartButton();
             } catch (error) {
                 logError('home.handleLetterClickDiff', error);
@@ -226,7 +235,9 @@ export default function renderHome(appRoot, context) {
                 const button = event.currentTarget;
                 const type = button.dataset.type;
                 selectedTypeDiff = type;
-                Array.from(typeGridDiff.children).forEach(child => child.classList.remove('is-active'));
+                // Clear both topics and positions highlights
+                Array.from(typeGridDiffTopics.children).forEach(child => child.classList.remove('is-active'));
+                Array.from(typeGridDiffPositions.children).forEach(child => child.classList.remove('is-active'));
                 button.classList.add('is-active');
                 // Clear selection in the other two sections for exclusivity
                 selectedType = null;
@@ -330,26 +341,40 @@ export default function renderHome(appRoot, context) {
             }
         }
 
-        function populateTypesDiff(letter) {
+        function populateTypesDiff(pair) {
             try {
-                clearElement(typeGridDiff);
-                const all = listTypes(letter);
-                const types = all.filter(t => /^Диференціація/.test(t));
-                if (!types.length) {
-                    setTextContent(typeLabelDiff, `${(texts.selectors.differentiationTypeLabel || texts.selectors.typeLabel)} ${texts.selectors.noOptionsNote}`);
+                clearElement(typeGridDiffTopics);
+                clearElement(typeGridDiffPositions);
+                const [a] = pair.split('-');
+                const all = listTypes(a);
+                const pairRe = new RegExp(`^Диференціація:\\s*${a}[-]${pair.split('-')[1]}\\s*—\\s*`);
+                const matching = all.filter(t => pairRe.test(t));
+                const topics = matching.filter(t => !/^(Диференціація:\s*[^—]+—\s*)?Звук/i.test(t));
+                const positions = matching.filter(t => /Звук/i.test(t));
+
+                if (!matching.length) {
+                    setTextContent(typeLabelDiffTopics, `${(texts.selectors.differentiationTopicLabel || texts.selectors.typeLabel)} ${texts.selectors.noOptionsNote}`);
+                    setTextContent(typeLabelDiffPositions, `${(texts.selectors.differentiationPositionLabel || texts.selectors.typeLabel)} ${texts.selectors.noOptionsNote}`);
                     return;
                 }
-                setTextContent(typeLabelDiff, texts.selectors.differentiationTypeLabel || texts.selectors.typeLabel);
-                types.forEach(typeName => {
-                    const button = createElement('button', {
-                        text: typeName,
-                        attrs: { type: 'button' },
-                        dataset: { type: typeName },
+                setTextContent(typeLabelDiffTopics, texts.selectors.differentiationTopicLabel || texts.selectors.typeLabel);
+                setTextContent(typeLabelDiffPositions, texts.selectors.differentiationPositionLabel || texts.selectors.typeLabel);
+
+                const addButtons = (list, grid) => {
+                    list.forEach(typeName => {
+                        const button = createElement('button', {
+                            text: typeName.replace(pairRe, ''),
+                            attrs: { type: 'button' },
+                            dataset: { type: typeName },
+                        });
+                        button.addEventListener('click', handleTypeClickDiff);
+                        disposables.push(() => button.removeEventListener('click', handleTypeClickDiff));
+                        grid.append(button);
                     });
-                    button.addEventListener('click', handleTypeClickDiff);
-                    disposables.push(() => button.removeEventListener('click', handleTypeClickDiff));
-                    typeGridDiff.append(button);
-                });
+                };
+
+                addButtons(topics, typeGridDiffTopics);
+                addButtons(positions, typeGridDiffPositions);
             } catch (error) {
                 logError('home.populateTypesDiff', error);
             }
@@ -382,26 +407,37 @@ export default function renderHome(appRoot, context) {
 
     populateLetters();
     populateLettersPh();
-    // Differentiation uses the same letters
-    function populateLettersDiff() {
+    // Differentiation uses PAIRS instead of letters, e.g., 'Р-Л', 'Л-Р'
+    function populatePairsDiff() {
         try {
-            clearElement(letterGridDiff);
+            clearElement(pairGridDiff);
+            const pairs = new Set();
             const letters = listLetters();
+            const pairNameRe = /^Диференціація:\s*([А-ЯІЇЄҐA-Z])[-]([А-ЯІЇЄҐA-Z])\s*—/u;
             letters.forEach(letter => {
-                const button = createElement('button', {
-                    text: letter,
-                    attrs: { type: 'button' },
-                    dataset: { letter },
+                const types = listTypes(letter);
+                types.forEach(t => {
+                    const m = t.match(pairNameRe);
+                    if (m) {
+                        pairs.add(`${m[1]}-${m[2]}`);
+                    }
                 });
-                button.addEventListener('click', handleLetterClickDiff);
-                disposables.push(() => button.removeEventListener('click', handleLetterClickDiff));
-                letterGridDiff.append(button);
+            });
+            Array.from(pairs).forEach(pair => {
+                const button = createElement('button', {
+                    text: pair,
+                    attrs: { type: 'button' },
+                    dataset: { pair },
+                });
+                button.addEventListener('click', handlePairClickDiff);
+                disposables.push(() => button.removeEventListener('click', handlePairClickDiff));
+                pairGridDiff.append(button);
             });
         } catch (error) {
-            logError('home.populateLettersDiff', error);
+            logError('home.populatePairsDiff', error);
         }
     }
-    populateLettersDiff();
+    populatePairsDiff();
     refreshStartButton();
     } catch (error) {
         logError('home.render', error);
