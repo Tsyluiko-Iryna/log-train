@@ -61,6 +61,17 @@ export default function renderHome(appRoot, context) {
         const typeGridPh = createElement('div', { classes: 'selector-grid' });
         typeWrapperPh.append(typeLabelPh, typeGridPh);
 
+        // DIFFERENTIATION SECTION (title label only)
+        const selectorsWrapperDiff = createElement('section', { classes: 'selector-section' });
+        const letterLabelDiff = createElement('div', { classes: 'selector-section__label', text: texts.selectors.differentiationLetterLabel || texts.selectors.letterLabel });
+        const letterGridDiff = createElement('div', { classes: 'selector-grid' });
+        selectorsWrapperDiff.append(letterLabelDiff, letterGridDiff);
+
+        const typeWrapperDiff = createElement('section', { classes: 'selector-section' });
+        const typeLabelDiff = createElement('div', { classes: 'selector-section__label', text: texts.selectors.differentiationTypeLabel || texts.selectors.typeLabel });
+        const typeGridDiff = createElement('div', { classes: 'selector-grid' });
+        typeWrapperDiff.append(typeLabelDiff, typeGridDiff);
+
         const actionsUnified = createElement('div', { classes: 'home-actions' });
         const startButton = createElement('button', {
             text: texts.selectors.startButton,
@@ -93,6 +104,8 @@ export default function renderHome(appRoot, context) {
             // unified start button placed after both sections
             selectorsWrapperPh,
             typeWrapperPh,
+            selectorsWrapperDiff,
+            typeWrapperDiff,
             actionsUnified,
             summary,
             gameStyleFooter
@@ -108,12 +121,15 @@ export default function renderHome(appRoot, context) {
     let selectedType = null;   // lexical
     let selectedLetterPh = null; // phonemic
     let selectedTypePh = null;   // phonemic
-    let activeSection = null; // 'lex' | 'ph'
+    let selectedLetterDiff = null; // differentiation
+    let selectedTypeDiff = null;   // differentiation
+    let activeSection = null; // 'lex' | 'ph' | 'diff'
 
         function refreshStartButton() {
             const readyLex = Boolean(selectedLetter && selectedType);
             const readyPh = Boolean(selectedLetterPh && selectedTypePh);
-            startButton.disabled = !(readyLex || readyPh);
+            const readyDiff = Boolean(selectedLetterDiff && selectedTypeDiff);
+            startButton.disabled = !(readyLex || readyPh || readyDiff);
         }
 
         function handleLetterClick(event) {
@@ -181,6 +197,40 @@ export default function renderHome(appRoot, context) {
                 refreshStartButton();
             } catch (error) {
                 logError('home.handleTypeClickPh', error);
+            }
+        }
+
+        function handleLetterClickDiff(event) {
+            try {
+                const button = event.currentTarget;
+                const letter = button.dataset.letter;
+                selectedLetterDiff = letter;
+                selectedTypeDiff = null;
+                Array.from(letterGridDiff.children).forEach(child => child.classList.remove('is-active'));
+                button.classList.add('is-active');
+                populateTypesDiff(letter);
+                refreshStartButton();
+            } catch (error) {
+                logError('home.handleLetterClickDiff', error);
+            }
+        }
+
+        function handleTypeClickDiff(event) {
+            try {
+                const button = event.currentTarget;
+                const type = button.dataset.type;
+                selectedTypeDiff = type;
+                Array.from(typeGridDiff.children).forEach(child => child.classList.remove('is-active'));
+                button.classList.add('is-active');
+                // Clear selection in the other two sections for exclusivity
+                selectedType = null;
+                Array.from(typeGrid.children).forEach(child => child.classList.remove('is-active'));
+                selectedTypePh = null;
+                Array.from(typeGridPh.children).forEach(child => child.classList.remove('is-active'));
+                activeSection = 'diff';
+                refreshStartButton();
+            } catch (error) {
+                logError('home.handleTypeClickDiff', error);
             }
         }
 
@@ -273,15 +323,45 @@ export default function renderHome(appRoot, context) {
             }
         }
 
+        function populateTypesDiff(letter) {
+            try {
+                clearElement(typeGridDiff);
+                const all = listTypes(letter);
+                const types = all.filter(t => /^Диференціація/.test(t));
+                if (!types.length) {
+                    setTextContent(typeLabelDiff, `${(texts.selectors.differentiationTypeLabel || texts.selectors.typeLabel)} ${texts.selectors.noOptionsNote}`);
+                    return;
+                }
+                setTextContent(typeLabelDiff, texts.selectors.differentiationTypeLabel || texts.selectors.typeLabel);
+                types.forEach(typeName => {
+                    const button = createElement('button', {
+                        text: typeName,
+                        attrs: { type: 'button' },
+                        dataset: { type: typeName },
+                    });
+                    button.addEventListener('click', handleTypeClickDiff);
+                    disposables.push(() => button.removeEventListener('click', handleTypeClickDiff));
+                    typeGridDiff.append(button);
+                });
+            } catch (error) {
+                logError('home.populateTypesDiff', error);
+            }
+        }
+
         const handleStartClick = () => {
             try {
                 const readyLex = selectedLetter && selectedType;
                 const readyPh = selectedLetterPh && selectedTypePh;
-                if (!(readyLex || readyPh)) return;
+                const readyDiff = selectedLetterDiff && selectedTypeDiff;
+                if (!(readyLex || readyPh || readyDiff)) return;
 
-                const useLex = activeSection === 'lex' ? true : (activeSection === 'ph' ? false : readyLex && !readyPh);
-                const letter = useLex ? selectedLetter : selectedLetterPh;
-                const type = useLex ? selectedType : selectedTypePh;
+                let use = activeSection;
+                if (!use) {
+                    // Fallback priority if none explicitly set: lex > ph > diff
+                    use = readyLex ? 'lex' : (readyPh ? 'ph' : 'diff');
+                }
+                const letter = use === 'lex' ? selectedLetter : (use === 'ph' ? selectedLetterPh : selectedLetterDiff);
+                const type = use === 'lex' ? selectedType : (use === 'ph' ? selectedTypePh : selectedTypeDiff);
 
                 context.showLoader(texts.loader.preparing);
                 setSelection({ letter, type });
@@ -295,6 +375,26 @@ export default function renderHome(appRoot, context) {
 
     populateLetters();
     populateLettersPh();
+    // Differentiation uses the same letters
+    function populateLettersDiff() {
+        try {
+            clearElement(letterGridDiff);
+            const letters = listLetters();
+            letters.forEach(letter => {
+                const button = createElement('button', {
+                    text: letter,
+                    attrs: { type: 'button' },
+                    dataset: { letter },
+                });
+                button.addEventListener('click', handleLetterClickDiff);
+                disposables.push(() => button.removeEventListener('click', handleLetterClickDiff));
+                letterGridDiff.append(button);
+            });
+        } catch (error) {
+            logError('home.populateLettersDiff', error);
+        }
+    }
+    populateLettersDiff();
     refreshStartButton();
     } catch (error) {
         logError('home.render', error);

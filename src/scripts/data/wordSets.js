@@ -224,6 +224,52 @@ function transformData() {
                 types,
             };
         });
+
+        // Auto-generate "Differentiation" types from available datasets
+        // Pairs target commonly confused sounds and reuse existing words/images
+        // Each pair is symmetric: we add a type to both letters of the pair
+        const DIFF_PAIRS = [
+            ['С', 'Ш'],
+            ['Р', 'Л'],
+            ['З', 'Ж'],
+        ];
+
+        // Helper to gather a pool of correct words for a letter (exclude phonemic "Звук …" groups)
+        const collectPool = (letter) => {
+            const entry = result[letter];
+            if (!entry) return [];
+            const pool = [];
+            Object.entries(entry.types).forEach(([t, data]) => {
+                if (/^Звук\s/.test(t)) return; // skip phonemic-position groups
+                data.correct.forEach(w => pool.push(w.text));
+            });
+            // De-duplicate while preserving order
+            return Array.from(new Set(pool));
+        };
+
+        DIFF_PAIRS.forEach(([a, b]) => {
+            const poolA = collectPool(a).slice(0, 8); // cap to keep trains manageable
+            const poolB = collectPool(b).slice(0, 8);
+            if (!poolA.length || !poolB.length) return;
+
+            const typeNameA = `Диференціація: ${a} ↔ ${b}`;
+            const typeNameB = `Диференціація: ${b} ↔ ${a}`;
+
+            const makeType = (correctWords, incorrectWords, typeName) => {
+                const correct = correctWords.map(w => buildWordEntry(w, true));
+                const incorrect = incorrectWords.map(w => buildWordEntry(w, false));
+                return { type: typeName, correct, incorrect, all: [...correct, ...incorrect] };
+            };
+
+            // Attach to A
+            if (result[a]) {
+                result[a].types[typeNameA] = makeType(poolA, poolB, typeNameA);
+            }
+            // Attach to B (mirrored)
+            if (result[b]) {
+                result[b].types[typeNameB] = makeType(poolB, poolA, typeNameB);
+            }
+        });
     } catch (error) {
         logError('wordSets.transformData', error);
     }
