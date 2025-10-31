@@ -1,5 +1,5 @@
 export const texts = {
-    siteTitle: 'Логопедичні ігри',
+    siteTitle: 'Логопедична гра',
     noscript: 'Для роботи застосунку потрібно увімкнути JavaScript.',
     gameCard: {
         title: 'Потяг',

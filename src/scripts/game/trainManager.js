@@ -87,6 +87,16 @@ export function createTrainManager({ stageEl, letter, typeData }) {
     }
 
     function getNodeBox(node) {
+        // Keep sizes in sync with actual DOM (media queries, font changes, etc.)
+        try {
+            const rect = node.element.getBoundingClientRect?.();
+            if (rect && rect.width && rect.height) {
+                if (rect.width !== node.size.width || rect.height !== node.size.height) {
+                    node.size.width = rect.width;
+                    node.size.height = rect.height;
+                }
+            }
+        } catch {}
         return {
             left: node.position.x,
             right: node.position.x + node.size.width,
@@ -150,6 +160,16 @@ export function createTrainManager({ stageEl, letter, typeData }) {
 
     function clampAllIntoBounds() {
         const clusters = getAllClusters();
+        // Refresh sizes before clamping (handles responsive CSS/font changes)
+        try {
+            nodes.forEach(node => {
+                const rect = node.element.getBoundingClientRect?.();
+                if (rect && rect.width && rect.height) {
+                    node.size.width = rect.width;
+                    node.size.height = rect.height;
+                }
+            });
+        } catch {}
         clusters.forEach(ids => clampClusterIntoBounds(ids));
     }
 
