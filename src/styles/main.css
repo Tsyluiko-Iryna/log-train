@@ -421,6 +421,8 @@ button:active:not(:disabled) {
     user-select: none;
     z-index: 10;
     overflow: hidden;
+    will-change: transform;
+    cursor: grab;
 }
 .train-item--cab .train-item__label {
     text-transform: uppercase;
@@ -466,6 +468,7 @@ button:active:not(:disabled) {
 .train-item.is-dragging {
     box-shadow: 0 18px 36px rgba(0, 0, 0, 0.2);
     z-index: 20;
+    cursor: grabbing;
 }
 
 .train-item.is-highlighted {
@@ -492,6 +495,7 @@ button:active:not(:disabled) {
     border: none;
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
     z-index: 18;
+    will-change: transform;
 }
 
 .train-lock:hover {

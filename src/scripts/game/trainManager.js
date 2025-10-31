@@ -102,6 +102,57 @@ export function createTrainManager({ stageEl, letter, typeData }) {
         state.bounds.height = stageEl.clientHeight;
     }
 
+    function getAllClusters() {
+        const result = [];
+        const visited = new Set();
+        nodes.forEach(node => {
+            if (visited.has(node.id)) {
+                return;
+            }
+            const group = Array.from(collectGroup(node.id));
+            group.forEach(id => visited.add(id));
+            result.push(group);
+        });
+        return result;
+    }
+
+    function clampClusterIntoBounds(clusterIds, padding = 8) {
+        const groupNodes = clusterIds.map(id => nodes.get(id)).filter(Boolean);
+        if (!groupNodes.length) {
+            return;
+        }
+        const bbox = computeGroupBounds(groupNodes);
+        let shiftX = 0;
+        let shiftY = 0;
+        const minXAllowed = padding;
+        const minYAllowed = padding;
+        const maxXAllowed = Math.max(state.bounds.width - padding, 0);
+        const maxYAllowed = Math.max(state.bounds.height - padding, 0);
+
+        if (bbox.minX < minXAllowed) {
+            shiftX += (minXAllowed - bbox.minX);
+        }
+        if (bbox.maxX > maxXAllowed) {
+            shiftX -= (bbox.maxX - maxXAllowed);
+        }
+        if (bbox.minY < minYAllowed) {
+            shiftY += (minYAllowed - bbox.minY);
+        }
+        if (bbox.maxY > maxYAllowed) {
+            shiftY -= (bbox.maxY - maxYAllowed);
+        }
+
+        if (shiftX !== 0 || shiftY !== 0) {
+            const initialPositions = groupNodes.map(member => ({ id: member.id, x: member.position.x, y: member.position.y }));
+            moveGroup(groupNodes, initialPositions, shiftX, shiftY);
+        }
+    }
+
+    function clampAllIntoBounds() {
+        const clusters = getAllClusters();
+        clusters.forEach(ids => clampClusterIntoBounds(ids));
+    }
+
     function applyPosition(node, x, y) {
         node.position.x = x;
         node.position.y = y;
@@ -623,8 +674,13 @@ export function createTrainManager({ stageEl, letter, typeData }) {
             await nextFrame();
             await nextFrame();
             placeNodesRandomly();
-            window.addEventListener('resize', updateBounds);
-            teardownCallbacks.push(() => window.removeEventListener('resize', updateBounds));
+            const handleResize = () => {
+                updateBounds();
+                // Keep all existing wagons visible when window size changes
+                clampAllIntoBounds();
+            };
+            window.addEventListener('resize', handleResize);
+            teardownCallbacks.push(() => window.removeEventListener('resize', handleResize));
         } catch (error) {
             logError('train.init', error);
         }
