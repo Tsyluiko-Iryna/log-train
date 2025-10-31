@@ -48,18 +48,11 @@ export default function renderHome(appRoot, context) {
         const typeGrid = createElement('div', { classes: 'selector-grid' });
         typeWrapper.append(typeLabel, typeGrid);
 
-        // We'll add a single Start button after both sections below
-
-    // PHONEMIC SECTION (title label only)
-        const selectorsWrapperPh = createElement('section', { classes: 'selector-section' });
-        const letterLabelPh = createElement('div', { classes: 'selector-section__label', text: texts.selectors.phonemicLetterLabel || texts.selectors.letterLabel });
-        const letterGridPh = createElement('div', { classes: 'selector-grid' });
-        selectorsWrapperPh.append(letterLabelPh, letterGridPh);
-
-        const typeWrapperPh = createElement('section', { classes: 'selector-section' });
-        const typeLabelPh = createElement('div', { classes: 'selector-section__label', text: texts.selectors.phonemicTypeLabel || texts.selectors.typeLabel });
-        const typeGridPh = createElement('div', { classes: 'selector-grid' });
-        typeWrapperPh.append(typeLabelPh, typeGridPh);
+        // POSITIONS (phonemic) under the same letter selection
+        const typeWrapperPos = createElement('section', { classes: 'selector-section' });
+        const typeLabelPos = createElement('div', { classes: 'selector-section__label', text: texts.selectors.phonemicTypeLabel || texts.selectors.typeLabel });
+        const typeGridPos = createElement('div', { classes: 'selector-grid' });
+        typeWrapperPos.append(typeLabelPos, typeGridPos);
 
         // DIFFERENTIATION SECTION (title label only)
     const selectorsWrapperDiff = createElement('section', { classes: 'selector-section' });
@@ -84,10 +77,7 @@ export default function renderHome(appRoot, context) {
         });
         actionsUnified.append(startButton);
 
-        const summary = createElement('p', {
-            classes: 'home-summary',
-            html: texts.siteSummary,
-        });
+        // Removed the optional summary text under the Start button for a cleaner layout
 
         // Footer tags like on game screen: author + legal in bottom-right
         const gameStyleFooter = createElement('div', { classes: 'game-footer' });
@@ -106,14 +96,11 @@ export default function renderHome(appRoot, context) {
             gameCard,
             selectorsWrapper,
             typeWrapper,
-            // unified start button placed after both sections
-            selectorsWrapperPh,
-            typeWrapperPh,
+            typeWrapperPos,
             selectorsWrapperDiff,
             typeWrapperDiffTopics,
             typeWrapperDiffPositions,
             actionsUnified,
-            summary,
             gameStyleFooter
         );
         wrapper.append(container);
@@ -123,20 +110,19 @@ export default function renderHome(appRoot, context) {
     const scaler = attachHeightScaler(container, { margin: 16, minScale: 0.5, widthOffset: 10, animate: false });
         disposables.push(() => scaler.dispose());
 
-    let selectedLetter = null; // lexical
+    let selectedLetter = null; // common for lexical and positions
     let selectedType = null;   // lexical
-    let selectedLetterPh = null; // phonemic
-    let selectedTypePh = null;   // phonemic
+    let selectedTypePos = null;   // positions
     let selectedPairDiff = null; // e.g., 'Р-Л'
     let selectedLetterDiff = null; // first letter of pair
     let selectedTypeDiff = null;   // differentiation
-    let activeSection = null; // 'lex' | 'ph' | 'diff'
+    let activeSection = null; // 'lex' | 'pos' | 'diff'
 
         function refreshStartButton() {
             const readyLex = Boolean(selectedLetter && selectedType);
-            const readyPh = Boolean(selectedLetterPh && selectedTypePh);
+            const readyPos = Boolean(selectedLetter && selectedTypePos);
             const readyDiff = Boolean(selectedLetterDiff && selectedTypeDiff);
-            startButton.disabled = !(readyLex || readyPh || readyDiff);
+            startButton.disabled = !(readyLex || readyPos || readyDiff);
         }
 
         function handleLetterClick(event) {
@@ -150,6 +136,7 @@ export default function renderHome(appRoot, context) {
                 button.classList.add('is-active');
 
                 populateTypesLexical(letter);
+                populateTypesPos(letter);
                 refreshStartButton();
             } catch (error) {
                 logError('home.handleLetterClick', error);
@@ -163,53 +150,37 @@ export default function renderHome(appRoot, context) {
                 selectedType = type;
                 Array.from(typeGrid.children).forEach(child => child.classList.remove('is-active'));
                 button.classList.add('is-active');
-                // Clear selection in the other section so only one theme is chosen overall
-                selectedTypePh = null;
-                Array.from(typeGridPh.children).forEach(child => child.classList.remove('is-active'));
+                // Clear selection in the other section (positions) so only one theme is chosen overall
+                selectedTypePos = null;
+                Array.from(typeGridPos.children).forEach(child => child.classList.remove('is-active'));
                 // Also clear differentiation section for exclusivity across three
                 selectedTypeDiff = null;
-                Array.from(typeGridDiff?.children || []).forEach(child => child.classList.remove('is-active'));
+                Array.from(typeGridDiffTopics.children).forEach(child => child.classList.remove('is-active'));
+                Array.from(typeGridDiffPositions.children).forEach(child => child.classList.remove('is-active'));
                 activeSection = 'lex';
                 refreshStartButton();
             } catch (error) {
                 logError('home.handleTypeClick', error);
             }
         }
-
-        function handleLetterClickPh(event) {
-            try {
-                const button = event.currentTarget;
-                const letter = button.dataset.letter;
-                selectedLetterPh = letter;
-                selectedTypePh = null;
-
-                Array.from(letterGridPh.children).forEach(child => child.classList.remove('is-active'));
-                button.classList.add('is-active');
-
-                populateTypesPhon(letter);
-                refreshStartButton();
-            } catch (error) {
-                logError('home.handleLetterClickPh', error);
-            }
-        }
-
-        function handleTypeClickPh(event) {
+        function handleTypeClickPos(event) {
             try {
                 const button = event.currentTarget;
                 const type = button.dataset.type;
-                selectedTypePh = type;
-                Array.from(typeGridPh.children).forEach(child => child.classList.remove('is-active'));
+                selectedTypePos = type;
+                Array.from(typeGridPos.children).forEach(child => child.classList.remove('is-active'));
                 button.classList.add('is-active');
-                // Clear selection in the other section so only one theme is chosen overall
+                // Clear selection in the other section (lexical)
                 selectedType = null;
                 Array.from(typeGrid.children).forEach(child => child.classList.remove('is-active'));
                 // Also clear differentiation section
                 selectedTypeDiff = null;
-                Array.from(typeGridDiff?.children || []).forEach(child => child.classList.remove('is-active'));
-                activeSection = 'ph';
+                Array.from(typeGridDiffTopics.children).forEach(child => child.classList.remove('is-active'));
+                Array.from(typeGridDiffPositions.children).forEach(child => child.classList.remove('is-active'));
+                activeSection = 'pos';
                 refreshStartButton();
             } catch (error) {
-                logError('home.handleTypeClickPh', error);
+                logError('home.handleTypeClickPos', error);
             }
         }
 
@@ -235,15 +206,15 @@ export default function renderHome(appRoot, context) {
                 const button = event.currentTarget;
                 const type = button.dataset.type;
                 selectedTypeDiff = type;
-                // Clear both topics and positions highlights
+                // Clear Diff grid highlights
                 Array.from(typeGridDiffTopics.children).forEach(child => child.classList.remove('is-active'));
                 Array.from(typeGridDiffPositions.children).forEach(child => child.classList.remove('is-active'));
                 button.classList.add('is-active');
                 // Clear selection in the other two sections for exclusivity
                 selectedType = null;
                 Array.from(typeGrid.children).forEach(child => child.classList.remove('is-active'));
-                selectedTypePh = null;
-                Array.from(typeGridPh.children).forEach(child => child.classList.remove('is-active'));
+                selectedTypePos = null;
+                Array.from(typeGridPos.children).forEach(child => child.classList.remove('is-active'));
                 activeSection = 'diff';
                 refreshStartButton();
             } catch (error) {
@@ -267,25 +238,6 @@ export default function renderHome(appRoot, context) {
                 });
             } catch (error) {
                 logError('home.populateLetters', error);
-            }
-        }
-
-        function populateLettersPh() {
-            try {
-                clearElement(letterGridPh);
-                const letters = listLetters();
-                letters.forEach(letter => {
-                    const button = createElement('button', {
-                        text: letter,
-                        attrs: { type: 'button' },
-                        dataset: { letter },
-                    });
-                    button.addEventListener('click', handleLetterClickPh);
-                    disposables.push(() => button.removeEventListener('click', handleLetterClickPh));
-                    letterGridPh.append(button);
-                });
-            } catch (error) {
-                logError('home.populateLettersPh', error);
             }
         }
 
@@ -314,30 +266,29 @@ export default function renderHome(appRoot, context) {
                 logError('home.populateTypesLexical', error);
             }
         }
-
-        function populateTypesPhon(letter) {
+        function populateTypesPos(letter) {
             try {
-                clearElement(typeGridPh);
+                clearElement(typeGridPos);
                 const all = listTypes(letter);
                 const wanted = ['Звук на початку', 'Звук в середині', 'Звук у кінці'];
                 const types = wanted.filter(t => all.includes(t));
                 if (!types.length) {
-                    setTextContent(typeLabelPh, `${(texts.selectors.phonemicTypeLabel || texts.selectors.typeLabel)} ${texts.selectors.noOptionsNote}`);
+                    setTextContent(typeLabelPos, `${(texts.selectors.phonemicTypeLabel || texts.selectors.typeLabel)} ${texts.selectors.noOptionsNote}`);
                     return;
                 }
-                setTextContent(typeLabelPh, texts.selectors.phonemicTypeLabel || texts.selectors.typeLabel);
+                setTextContent(typeLabelPos, texts.selectors.phonemicTypeLabel || texts.selectors.typeLabel);
                 types.forEach(typeName => {
                     const button = createElement('button', {
                         text: typeName,
                         attrs: { type: 'button' },
                         dataset: { type: typeName },
                     });
-                    button.addEventListener('click', handleTypeClickPh);
-                    disposables.push(() => button.removeEventListener('click', handleTypeClickPh));
-                    typeGridPh.append(button);
+                    button.addEventListener('click', handleTypeClickPos);
+                    disposables.push(() => button.removeEventListener('click', handleTypeClickPos));
+                    typeGridPos.append(button);
                 });
             } catch (error) {
-                logError('home.populateTypesPhon', error);
+                logError('home.populateTypesPos', error);
             }
         }
 
@@ -383,17 +334,17 @@ export default function renderHome(appRoot, context) {
         const handleStartClick = () => {
             try {
                 const readyLex = selectedLetter && selectedType;
-                const readyPh = selectedLetterPh && selectedTypePh;
+                const readyPos = selectedLetter && selectedTypePos;
                 const readyDiff = selectedLetterDiff && selectedTypeDiff;
-                if (!(readyLex || readyPh || readyDiff)) return;
+                if (!(readyLex || readyPos || readyDiff)) return;
 
                 let use = activeSection;
                 if (!use) {
-                    // Fallback priority if none explicitly set: lex > ph > diff
-                    use = readyLex ? 'lex' : (readyPh ? 'ph' : 'diff');
+                    // Fallback priority if none explicitly set: lex > pos > diff
+                    use = readyLex ? 'lex' : (readyPos ? 'pos' : 'diff');
                 }
-                const letter = use === 'lex' ? selectedLetter : (use === 'ph' ? selectedLetterPh : selectedLetterDiff);
-                const type = use === 'lex' ? selectedType : (use === 'ph' ? selectedTypePh : selectedTypeDiff);
+                const letter = use === 'diff' ? selectedLetterDiff : selectedLetter;
+                const type = use === 'lex' ? selectedType : (use === 'pos' ? selectedTypePos : selectedTypeDiff);
 
                 context.showLoader(texts.loader.preparing);
                 setSelection({ letter, type });
@@ -406,7 +357,6 @@ export default function renderHome(appRoot, context) {
         disposables.push(() => startButton.removeEventListener('click', handleStartClick));
 
     populateLetters();
-    populateLettersPh();
     // Differentiation uses PAIRS instead of letters, e.g., 'Р-Л', 'Л-Р'
     function populatePairsDiff() {
         try {
@@ -423,7 +373,8 @@ export default function renderHome(appRoot, context) {
                     }
                 });
             });
-            Array.from(pairs).forEach(pair => {
+            const list = Array.from(pairs).sort();
+            list.forEach(pair => {
                 const button = createElement('button', {
                     text: pair,
                     attrs: { type: 'button' },
@@ -433,11 +384,33 @@ export default function renderHome(appRoot, context) {
                 disposables.push(() => button.removeEventListener('click', handlePairClickDiff));
                 pairGridDiff.append(button);
             });
+            // Auto-select first pair to pre-populate diff types
+            const firstBtn = pairGridDiff.querySelector('button');
+            if (firstBtn) {
+                firstBtn.classList.add('is-active');
+                const pair = firstBtn.dataset.pair;
+                selectedPairDiff = pair;
+                const [first] = pair.split('-');
+                selectedLetterDiff = first;
+                populateTypesDiff(pair);
+            }
         } catch (error) {
             logError('home.populatePairsDiff', error);
         }
     }
     populatePairsDiff();
+
+    // Auto-select first letter to pre-populate lexical/position grids
+    (function autoSelectDefaultLetter() {
+        const firstBtn = letterGrid.querySelector('button');
+        if (!firstBtn) return;
+        firstBtn.classList.add('is-active');
+        const letter = firstBtn.dataset.letter;
+        selectedLetter = letter;
+        populateTypesLexical(letter);
+        populateTypesPos(letter);
+    })();
+
     refreshStartButton();
     } catch (error) {
         logError('home.render', error);
