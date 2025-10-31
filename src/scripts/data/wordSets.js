@@ -1,200 +1,7 @@
 import { resolveImage } from './imageMap.js';
 import { logError } from '../utils/logger.js';
-
-const rawWordData = {
-    'С': {
-        'Овочі': {
-            correct: ['капуста', 'редиска', 'часник', 'спаржа', 'квасоля'],
-            incorrect: ['сова', 'стакан'],
-        },
-        'Фрукти': {
-            correct: ['слива', 'ананас', 'апельсин', 'персик', 'абрикос'],
-            incorrect: ['костюм', 'собака'],
-        },
-        'Одяг': {
-            correct: ['костюм', 'спідниця', 'сорочка', 'светр', 'сукня'],
-            incorrect: ['часник', 'гуска'],
-        },
-        'Тварини': {
-            correct: ['собака', 'лось', 'лисиця', 'носоріг', 'слон'],
-            incorrect: ['капуста', 'светр'],
-        },
-        'Птахи': {
-            correct: ['сова', 'сорока', 'снігур', 'ластівка', 'страус'],
-            incorrect: ['спідниця', 'апельсин'],
-        },
-        'Посуд': {
-            correct: ['стакан', 'салатниця', 'каструля', 'термос', 'сковорідка'],
-            incorrect: ['квасоля', 'лисиця'],
-        },
-        'Звук на початку': {
-            correct: ['сік', 'склянка', 'стіл', 'стілець', 'сумка'],
-            incorrect: ['посилка', 'насіння'],
-        },
-        'Звук в середині': {
-            correct: ['веселка', 'оса', 'носоріг', 'косичка', 'осел'],
-            incorrect: ['сапка', 'стакан'],
-        },
-        'Звук у кінці': {
-            correct: ['автобус', 'ананас', 'ніс', 'кокос', 'термос'],
-            incorrect: ['самокат', 'сонце'],
-        },
-    },
-    'Ш': {
-        'Фрукти': {
-            correct: ['шовковиця', 'груша', 'черешня', 'вишня'],
-            incorrect: ['каша', 'миша', 'шапка'],
-        },
-        'Одяг': {
-            correct: ['шорти', 'штани', 'шуба', 'шапка', 'шарф'],
-            incorrect: ['вишня', 'кішка'],
-        },
-        'Тварини': {
-            correct: ['миша', 'шиншила', 'шимпанзе', 'кішка', 'мурашка'],
-            incorrect: ['вишня', 'шапка'],
-        },
-        'Продукти': {
-            correct: ['каша', 'лаваш', 'локшина', 'шоколад', 'горошок'],
-            incorrect: ['миша', 'штани'],
-        },
-        'Звук на початку': {
-            correct: ['шафа', 'шишка', 'шуруп', 'шолом', 'шахи'],
-            incorrect: ['чашка', 'мішок'],
-        },
-        'Звук в середині': {
-            correct: ['миша', 'кошеня', 'зошит', 'дошка', 'машина'],
-            incorrect: ['шапка', 'шоколад'],
-        },
-        'Звук у кінці': {
-            correct: ['душ', 'ківш', 'аркуш', 'гуаш', 'фініш'],
-            incorrect: ['гроші', 'шоколад'],
-        },
-    },
-    'Р': {
-        'Овочі': {
-            correct: ['редиска', 'буряк', 'перець', 'морква', 'картопля', 'помідор'],
-            incorrect: ['жираф'],
-        },
-        'Фрукти': {
-            correct: ['смородина', 'персик', 'абрикос', 'груша', 'аґрус', 'гранат'],
-            incorrect: ['сорока'],
-        },
-        'Одяг': {
-            correct: ['сорочка', 'светр', 'сарафан', 'рукавиці', 'ремінь'],
-            incorrect: ['баран', 'морква'],
-        },
-        'Тварини': {
-            correct: ['носоріг', 'рись', 'корова', 'баран', 'тигр', 'жираф'],
-            incorrect: ['рукавиці'],
-        },
-        'Птахи': {
-            correct: ['сорока', 'снігур', 'ворона', 'журавель', 'горобець'],
-            incorrect: ['помідор', 'сарафан'],
-        },
-        'Посуд': {
-            correct: ['каструля', 'термос', 'тертка', 'сковорідка', 'тарілка'],
-            incorrect: ['баран', 'картопля'],
-        },
-        'Звук на початку': {
-            correct: ['рак', 'риба', 'ранець', 'ракета', 'равлик'],
-            incorrect: ['мурашка', 'гора'],
-        },
-        'Звук в середині': {
-            correct: ['фарба', 'курка', 'парк', 'корж', 'морж'],
-            incorrect: ['риба', 'річка'],
-        },
-        'Звук у кінці': {
-            correct: ['сир', 'катер', 'буквар', 'комар', 'бобер', 'мухомор'],
-            incorrect: ['рак'],
-        },
-    },
-    'З': {
-        'Тварини': {
-            correct: ['зебра', 'коза', 'зубр', 'заєць', 'змія'],
-            incorrect: ['гарбуз', 'кукурудза'],
-        },
-        'Птахи': {
-            correct: ['зозуля', 'фазан', 'зяблик', 'дрізд'],
-            incorrect: ['рюкзак', 'зима', 'дзеркало'],
-        },
-        'Їжа': {
-            correct: ['морозиво', 'зефір', 'лазанья', 'бринза', 'майонез'],
-            incorrect: ['газета', 'козак'],
-        },
-        'Звук на початку': {
-            correct: ['зубр', 'замок', 'зошит', 'зоопарк', 'закладка'],
-            incorrect: ['водолаз', 'рюкзак'],
-        },
-        'Звук в середині': {
-            correct: ['гніздо', 'козак', 'мозаїка', 'динозавр', 'рюкзак'],
-            incorrect: ['зефір', 'гарбуз'],
-        },
-        'Звук у кінці': {
-            correct: ['приз', 'гарбуз', 'мороз', 'віз', 'водолаз'],
-            incorrect: ['змія', 'морозиво'],
-        },
-    },
-    'Ж': {
-        'Овочі': {
-            correct: ['баклажан', 'спаржа'],
-            incorrect: ['кажан', 'їжак', 'пиріжок', 'жолудь', 'гараж'],
-        },
-        'Одяг': {
-            correct: ['піжама', 'піджак', 'жакет', 'жилетка', 'джинси'],
-            incorrect: ['жук', 'баклажан'],
-        },
-        'Тварини': {
-            correct: ['жук', 'жаба', 'їжак', 'вуж', 'морж', 'жираф'],
-            incorrect: ['журнал'],
-        },
-        'Птахи': {
-            correct: ['жайворонок', 'журавель', 'стриж', 'чиж', 'кажан'],
-            incorrect: ['жаба', 'пиріжок'],
-        },
-        'Їжа': {
-            correct: ['жуйка', 'пиріжок', 'жовток', 'ріжок', 'драже', 'желе'],
-            incorrect: ['жираф'],
-        },
-        'Звук на початку': {
-            correct: ['жакет', 'жолудь', 'жираф', 'жук', 'жовтий'],
-            incorrect: ['ведмежа', 'калюжа'],
-        },
-        'Звук в середині': {
-            correct: ['сніжок', 'баклажан', 'лежак', 'кажан', 'їжак'],
-            incorrect: ['журавель', 'журнал'],
-        },
-        'Звук у кінці': {
-            correct: ['вуж', 'морж', 'ніж', 'гараж', 'йорж'],
-            incorrect: ['ложка', 'ножиці'],
-        },
-    },
-    'Л': {
-        'Тварини': {
-            correct: ['лисиця', 'білка', 'лев', 'лось', 'лама', 'осел'],
-            incorrect: ['лимон'],
-        },
-        'Їжа': {
-            correct: ['картопля', 'квасоля', 'апельсин', 'слива', 'яблуко', 'малина'],
-            incorrect: ['стіл'],
-        },
-        'Одяг': {
-            correct: ['футболка', 'халат', 'лосини', 'блузка', 'жилетка'],
-            incorrect: ['лев', 'велосипед'],
-        },
-        'Звук на початку': {
-            correct: ['ліс', 'лід', 'ліки', 'лампа', 'лев'],
-            incorrect: ['молоко', 'плов'],
-        },
-        'Звук в середині': {
-            correct: ['булочка', 'телефон', 'палець', 'гойдалка', 'молоко', 'малина'],
-            incorrect: ['лев'],
-        },
-        'Звук у кінці': {
-            correct: ['пенал', 'стіл', 'дятел', 'осел', 'віл', 'овал'],
-            incorrect: ['халат'],
-        },
-    },
-};
+import { singleLetterWordData } from './words/singleLetter.js';
+import { pairWordData } from './words/pairs.js';
 
 function buildWordEntry(word, isCorrect) {
     return {
@@ -207,7 +14,8 @@ function buildWordEntry(word, isCorrect) {
 function transformData() {
     const result = {};
     try {
-        Object.entries(rawWordData).forEach(([letter, groups]) => {
+        // Build base single-letter datasets (lexical + positions)
+        Object.entries(singleLetterWordData).forEach(([letter, groups]) => {
             const types = {};
             Object.entries(groups).forEach(([typeName, payload]) => {
                 const correct = payload.correct.map(word => buildWordEntry(word, true));
@@ -225,50 +33,24 @@ function transformData() {
             };
         });
 
-        // Auto-generate "Differentiation" types from available datasets
-        // Pairs target commonly confused sounds and reuse existing words/images
-        // Each pair is symmetric: we add a type to both letters of the pair
-        const DIFF_PAIRS = [
-            ['С', 'Ш'],
-            ['Р', 'Л'],
-            ['З', 'Ж'],
-        ];
-
-        // Helper to gather a pool of correct words for a letter (exclude phonemic "Звук …" groups)
-        const collectPool = (letter) => {
-            const entry = result[letter];
-            if (!entry) return [];
-            const pool = [];
-            Object.entries(entry.types).forEach(([t, data]) => {
-                if (/^Звук\s/.test(t)) return; // skip phonemic-position groups
-                data.correct.forEach(w => pool.push(w.text));
+        // Inject Differentiation (pairs) datasets from external module
+        // Expect keys like 'С-Ш' and items: [{ label, correct, incorrect }]
+        Object.entries(pairWordData).forEach(([pairKey, payload]) => {
+            const m = pairKey.match(/^\s*([А-ЯІЇЄҐA-Z])\s*-\s*([А-ЯІЇЄҐA-Z])\s*$/u);
+            if (!m) return;
+            const a = m[1].toUpperCase();
+            const b = m[2].toUpperCase();
+            const items = Array.isArray(payload?.items) ? payload.items : [];
+            if (!items.length) return;
+            if (!result[a]) {
+                result[a] = { letter: a, types: {} };
+            }
+            items.forEach(({ label, correct = [], incorrect = [] }) => {
+                const typeNameA = `Диференціація: ${a}-${b} — ${label}`;
+                const c = correct.map(w => buildWordEntry(w, true));
+                const i = incorrect.map(w => buildWordEntry(w, false));
+                result[a].types[typeNameA] = { type: typeNameA, correct: c, incorrect: i, all: [...c, ...i] };
             });
-            // De-duplicate while preserving order
-            return Array.from(new Set(pool));
-        };
-
-        DIFF_PAIRS.forEach(([a, b]) => {
-            const poolA = collectPool(a).slice(0, 8); // cap to keep trains manageable
-            const poolB = collectPool(b).slice(0, 8);
-            if (!poolA.length || !poolB.length) return;
-
-            const typeNameA = `Диференціація: ${a} ↔ ${b}`;
-            const typeNameB = `Диференціація: ${b} ↔ ${a}`;
-
-            const makeType = (correctWords, incorrectWords, typeName) => {
-                const correct = correctWords.map(w => buildWordEntry(w, true));
-                const incorrect = incorrectWords.map(w => buildWordEntry(w, false));
-                return { type: typeName, correct, incorrect, all: [...correct, ...incorrect] };
-            };
-
-            // Attach to A
-            if (result[a]) {
-                result[a].types[typeNameA] = makeType(poolA, poolB, typeNameA);
-            }
-            // Attach to B (mirrored)
-            if (result[b]) {
-                result[b].types[typeNameB] = makeType(poolB, poolA, typeNameB);
-            }
         });
     } catch (error) {
         logError('wordSets.transformData', error);

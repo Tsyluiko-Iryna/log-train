@@ -2,7 +2,8 @@ import { createLoadingOverlay } from './ui/loadingOverlay.js';
 import { initRouter } from './router.js';
 import { logError } from './utils/logger.js';
 import { texts } from './data/texts.js';
-import { loadDifferentiationFromFile } from './data/wordSets.js';
+// Differentiation data now comes from src/scripts/data/words/pairs.js via wordSets.
+// No need to prefetch from text file on startup.
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -19,14 +20,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch {}
 
         const loader = createLoadingOverlay(document.body);
-        try {
-            loader.show(texts.loader.preparing);
-            await loadDifferentiationFromFile();
-        } catch (e) {
-            logError('main.loadDifferentiation', e);
-        } finally {
-            loader.hide();
-        }
 
         initRouter({
             appRoot,
