@@ -1,6 +1,6 @@
 import { createElement, clearElement, setTextContent } from '../../utils/dom.js';
 import { getSelection, clearSelection } from '../../store/session.js';
-import { getTypeData, getAllWordsForLetter } from '../../data/wordSets.js';
+import { getTypeData, getAllWordsForLetter, getCatalog } from '../../data/wordSets.js';
 import { texts } from '../../data/texts.js';
 import { preloadImages } from '../../game/assetLoader.js';
 import { createTrainManager } from '../../game/trainManager.js';
@@ -42,9 +42,63 @@ export default async function renderGame(appRoot, context) {
 
         const allWords = getAllWordsForLetter(letter);
         const correctWords = typeData.correct.map(item => ({ text: item.text, file: item.file }));
-        const distractorPool = allWords.filter(item => !correctWords.some(word => word.text === item.text));
         const requiredDistractors = Math.max(9 - correctWords.length, 0);
-        const memoryDistractors = shuffle(distractorPool).slice(0, requiredDistractors);
+
+        const catalog = getCatalog();
+        function uniqByText(list) {
+            const seen = new Set();
+            const out = [];
+            list.forEach(it => {
+                if (!seen.has(it.text)) {
+                    seen.add(it.text);
+                    out.push({ text: it.text, file: it.file });
+                }
+            });
+            return out;
+        }
+        function wordsFromTypeIds(ids) {
+            const acc = [];
+            ids.forEach(id => {
+                const t = catalog.types[id];
+                if (t?.all?.length) {
+                    t.all.forEach(w => acc.push({ text: w.text, file: w.file }));
+                }
+            });
+            return uniqByText(acc);
+        }
+        function computeMemoryDistractors(letter, typeName, needed) {
+            const id = `${letter}|${typeName}`;
+            const meta = catalog.types[id];
+            if (!meta) {
+                const pool = allWords.filter(item => !correctWords.some(w => w.text === item.text));
+                return shuffle(pool).slice(0, needed);
+            }
+            let pool = [];
+            if (meta.mode === 'lexical') {
+                const others = catalog.byLetter[letter]?.types?.lexical?.filter(tid => tid !== id) || [];
+                pool = wordsFromTypeIds(others);
+            } else if (meta.mode === 'position') {
+                const others = catalog.byLetter[letter]?.types?.positions?.filter(tid => tid !== id) || [];
+                pool = wordsFromTypeIds(others);
+            } else if (meta.mode === 'diff') {
+                const [a, b] = (meta.pair || '').split('-');
+                const reverse = `${b}-${a}`;
+                const bucket = /^Звук/i.test(meta.label) ? 'positions' : 'topics';
+                const container = catalog.byLetter[b]?.pairs?.[reverse];
+                const ids = container ? (container[bucket] || []) : [];
+                pool = wordsFromTypeIds(ids);
+            }
+            // exclude current correct words
+            pool = pool.filter(item => !correctWords.some(w => w.text === item.text));
+            if (pool.length < needed) {
+                const fallback = allWords.filter(item => !correctWords.some(w => w.text === item.text));
+                const extra = fallback.filter(x => !pool.some(p => p.text === x.text));
+                pool = [...pool, ...extra];
+            }
+            return shuffle(pool).slice(0, needed);
+        }
+
+        const memoryDistractors = computeMemoryDistractors(letter, type, requiredDistractors);
 
         const assets = new Set(['locomotive.png']);
         typeData.all.forEach(word => assets.add(word.file));
