@@ -82,13 +82,20 @@ export function createSoundManager() {
                         if (!voices.length) {
                             return false;
                         }
-                        // Пріоритет: жіночий uk-UA (часто "Google українська"), інакше перший uk-UA, інакше перший доступний
+                        // Пріоритет: жіночий uk-UA (часто "Google українська"), далі будь-який uk-UA,
+                        // потім жіночий ru-RU, будь-який ru-RU, потім жіночий en-US, далі будь-який, і лише потім перший доступний
                         const isUk = v => (v.lang || '').toLowerCase().startsWith('uk');
+                        const isRu = v => (v.lang || '').toLowerCase().startsWith('ru');
+                        const isEn = v => (v.lang || '').toLowerCase().startsWith('en');
                         // Жендер не стандартизований у Web Speech, намагаємося за назвою
                         const looksFemale = v => /female|жіноч/i.test(v.name || '');
                         let candidate = voices.find(v => isUk(v) && /google/i.test(v.name) && looksFemale(v))
                                       || voices.find(v => isUk(v) && looksFemale(v))
                                       || voices.find(v => isUk(v))
+                                      || voices.find(v => isRu(v) && looksFemale(v))
+                                      || voices.find(v => isRu(v))
+                                      || voices.find(v => isEn(v) && looksFemale(v))
+                                      || voices.find(v => isEn(v))
                                       || voices[0] || null;
                         selectedVoice = candidate || null;
                         if (selectedVoice) {
@@ -149,12 +156,26 @@ export function createSoundManager() {
             }
             const voice = await ensureVoices();
             const utter = new SpeechSynthesisUtterance(String(text));
-            utter.lang = (selectedVoice && selectedVoice.lang) || 'uk-UA';
-            utter.voice = selectedVoice || null;
+            // Визначаємо цільову мову: намагаємось uk-UA, якщо її нема — беремо ru-RU як ближчу;
+            // якщо вибраний голос англійський — встановлюємо en-US; інакше лишаємо uk-UA (браузер підбере дефолт)
+            const voiceLang = (selectedVoice && selectedVoice.lang ? selectedVoice.lang.toLowerCase() : '');
+            let targetLang = 'uk-UA';
+            if (voiceLang.startsWith('uk')) targetLang = 'uk-UA';
+            else if (voiceLang.startsWith('ru')) targetLang = 'ru-RU';
+            else if (voiceLang.startsWith('en')) targetLang = 'en-US';
+            utter.lang = targetLang;
+            // Використовуємо voice тільки якщо його lang узгоджений з targetLang, щоб не примушувати невідповідність
+            if (selectedVoice && voiceLang.startsWith(targetLang.slice(0,2).toLowerCase())) {
+                utter.voice = selectedVoice;
+            } else if (voiceLang && !voiceLang.startsWith('uk')) {
+                // Якщо вибраний голос не український, але має свою валідну мову (наприклад, ru/en),
+                // краще довіритися добору за lang, тому явно не прив'язуємо голос
+                utter.voice = null;
+            }
             utter.rate = 1.0;
             utter.pitch = 1.0;
             utter.volume = 1.0;
-            logInfo('tts.speak', 'Attempt speak', { text, lang: utter.lang, voice: voice ? { name: voice.name, lang: voice.lang } : null });
+            logInfo('tts.speak', 'Attempt speak', { text, lang: utter.lang, selectedVoice: selectedVoice ? { name: selectedVoice.name, lang: selectedVoice.lang } : null });
             utter.onend = () => logInfo('tts.onend', 'Utterance finished', { text });
             utter.onerror = (e) => logError('tts.onerror', e.error || e);
             // Скасовуємо попереднє, щоб уникати накладань
