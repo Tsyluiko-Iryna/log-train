@@ -56,8 +56,8 @@
 :root {
   /* Palette (Pastel Meadow) */
   --color-bg: #FAF7F2;            /* warm soft background */
-  --color-surface: #FFFFFF;        /* panels/cards */
-  --color-surface-muted: #FEFCFA;  /* subtle surface variant */
+  --color-surface: #FFF7F0;        /* softly tinted panels/cards (less pure white) */
+  --color-surface-muted: #FEF1E8;  /* warmer subtle surface variant */
   --color-border: #8E8A82;         /* UI borders (>=3:1 vs surface) */
 
   --color-text: #2B2A28;           /* primary text (AA on bg/surface) */
@@ -82,9 +82,9 @@
 
   /* Overlays / alpha presets */
   --overlay-bg: rgba(250, 247, 242, 0.78);               /* loader overlay */
-  --panel-bg-alpha: rgba(255, 255, 255, 0.94);           /* question panel */
-  --panel-bg-alpha-weak: rgba(255, 255, 255, 0.88);      /* toolbar */
-  --panel-bg-alpha-93: rgba(255, 255, 255, 0.93);        /* memory test */
+  --panel-bg-alpha: rgba(255, 247, 240, 0.94);           /* question panel (tinted) */
+  --panel-bg-alpha-weak: rgba(255, 247, 240, 0.88);      /* toolbar (tinted) */
+  --panel-bg-alpha-93: rgba(255, 247, 240, 0.93);        /* memory test (tinted) */
   --status-success-bg: rgba(47, 125, 77, 0.92);
   --status-error-bg: rgba(183, 76, 76, 0.92);
   --success-weak: rgba(47, 125, 77, 0.18);
@@ -92,7 +92,7 @@
   --ink-overlay-weak: rgba(0, 0, 0, 0.04);
   --ink-overlay-05: rgba(0, 0, 0, 0.05);
   --label-ink-gradient: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0));
-  --stage-gradient: linear-gradient(180deg, rgba(250, 247, 242, 0.6), rgba(255,255,255,0.9));
+  --stage-gradient: linear-gradient(180deg, rgba(250, 247, 242, 0.7), rgba(255, 247, 240, 0.9));
   --promo-visual-gradient: linear-gradient(135deg, rgba(177, 131, 122, 0.28), rgba(111, 164, 193, 0.28));
 
   /* Typography */
@@ -161,7 +161,7 @@
   --lock-bg: #d4d4d2;
   --lock-hover-bg: #c6c6c4;
   --lock-active-bg: #b8b8b6;
-  --locked-area-bg: rgba(255, 255, 255, 0.95);
+  --locked-area-bg: rgba(255, 247, 240, 0.95);
 }
 
 /* Dark theme (optional) */

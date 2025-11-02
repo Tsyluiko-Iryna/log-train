@@ -216,7 +216,7 @@ button:active:not(:disabled) {
 .game-card__tagline {
     margin: 0;
     font-weight: 800;
-    color: var(--color-text-primary);
+    color: var(--color-accent-blue);
     font-size: clamp(1rem, 1.6vw, 1.1rem);
 }
 
@@ -753,7 +753,7 @@ button:active:not(:disabled) {
     font-weight: 700;
     margin: 0;
     font-size: 1.35rem;
-    color: var(--color-text-primary);
+    color: var(--color-accent-blue);
 }
 
 .question-panel__progress {
@@ -780,7 +780,7 @@ button:active:not(:disabled) {
 .memory-test__title {
     margin: 0;
     font-weight: 700;
-    color: var(--color-text-primary);
+    color: var(--accent-indigo);
 }
 
 .memory-test__grid {
