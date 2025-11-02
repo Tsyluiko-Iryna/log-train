@@ -54,45 +54,46 @@
 */
 
 :root {
-  /* Palette */
-  --color-bg: #f7f7f5;
-  --color-surface: #ffffff;
-  --color-surface-muted: #f9f9f8;
-  --color-border: #c9c9c7;
+  /* Palette (Pastel Meadow) */
+  --color-bg: #FAF7F2;            /* warm soft background */
+  --color-surface: #FFFFFF;        /* panels/cards */
+  --color-surface-muted: #FEFCFA;  /* subtle surface variant */
+  --color-border: #8E8A82;         /* UI borders (>=3:1 vs surface) */
 
-  --color-text: #2f2f2c;
-  --color-text-muted: #535351;
+  --color-text: #2B2A28;           /* primary text (AA on bg/surface) */
+  --color-text-muted: #6A6862;     /* secondary text */
 
-  --accent-red: #d4796b;
-  --accent-orange: #d89a62;
-  --accent-yellow: #d8c362;
-  --accent-green: #81b98a;
-  --accent-blue: #6aa7c7;
-  --accent-indigo: #6f7ec1;
-  --accent-violet: #9b7ebd;
+  /* Accents */
+  --accent-red: #B74C4C;           /* aligns with error hue */
+  --accent-orange: #C89767;
+  --accent-yellow: #C8B46A;
+  --accent-green: #2D6B62;         /* primary actions (used by btn-bg) */
+  --accent-blue: #6FA4C1;          /* links, subtle accents */
+  --accent-indigo: #5B8BD0;        /* focus/loader spinner */
+  --accent-violet: #9B7EBD;
 
-  --color-muted: #e0e0dd;
+  --color-muted: #E0E0DD;
 
   /* State colors */
-  --color-success: #7ab37c;
-  --color-error: #d66a6a;
-  --color-info: var(--accent-blue);
-  --color-warning: var(--accent-yellow);
+  --color-success: #2F7D4D;        /* solid success */
+  --color-error: #B74C4C;          /* solid error */
+  --color-info: #356C9A;
+  --color-warning: #B88B32;
 
   /* Overlays / alpha presets */
-  --overlay-bg: rgba(247, 247, 245, 0.78);               /* loader overlay */
+  --overlay-bg: rgba(250, 247, 242, 0.78);               /* loader overlay */
   --panel-bg-alpha: rgba(255, 255, 255, 0.94);           /* question panel */
   --panel-bg-alpha-weak: rgba(255, 255, 255, 0.88);      /* toolbar */
   --panel-bg-alpha-93: rgba(255, 255, 255, 0.93);        /* memory test */
-  --status-success-bg: rgba(122, 179, 124, 0.92);
-  --status-error-bg: rgba(214, 106, 106, 0.92);
-  --success-weak: rgba(122, 179, 124, 0.18);
-  --error-weak: rgba(214, 106, 106, 0.18);
+  --status-success-bg: rgba(47, 125, 77, 0.92);
+  --status-error-bg: rgba(183, 76, 76, 0.92);
+  --success-weak: rgba(47, 125, 77, 0.18);
+  --error-weak: rgba(183, 76, 76, 0.18);
   --ink-overlay-weak: rgba(0, 0, 0, 0.04);
   --ink-overlay-05: rgba(0, 0, 0, 0.05);
   --label-ink-gradient: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0));
-  --stage-gradient: linear-gradient(180deg, rgba(215,231,236,0.6), rgba(255,255,255,0.9));
-  --promo-visual-gradient: linear-gradient(135deg, rgba(218, 163, 120, 0.32), rgba(111, 126, 193, 0.32));
+  --stage-gradient: linear-gradient(180deg, rgba(250, 247, 242, 0.6), rgba(255,255,255,0.9));
+  --promo-visual-gradient: linear-gradient(135deg, rgba(177, 131, 122, 0.28), rgba(111, 164, 193, 0.28));
 
   /* Typography */
   --font-family-base: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
