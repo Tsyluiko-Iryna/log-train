@@ -14,7 +14,9 @@
     <link rel="icon" type="image/png" href="src/images/logo.png">
     <link rel="apple-touch-icon" href="src/images/logo.png">
 
-    <!-- Стилі: використовуємо preload для раннього завантаження CSS і застосовуємо його після завершення завантаження. Фолбек у <noscript> підключить stylesheet, якщо JS вимкнено. -->
+    <!-- Стилі теми: централізовані токени, мають бути доступні до основного CSS -->
+    <link rel="stylesheet" href="src/styles/theme.css">
+    <!-- Основні стилі: preload + fallback -->
     <!-- Зауваження: inline onload може блокуватися політикою CSP; у такому разі використайте простий <link rel="stylesheet"> або зовнішній скрипт для перемикання rel. -->
     <link rel="preload" href="src/styles/main.css" as="style" onload="this.rel='stylesheet'">
     <noscript>

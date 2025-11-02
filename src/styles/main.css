@@ -1,23 +1,29 @@
+/*
+    main.css uses tokens defined in src/styles/theme.css.
+    Color / shadow / radius / typography tokens live in the theme file.
+
+    Typography tokens used from theme:
+        - --font-family-base : primary font stack for the app
+        - --font-weight-regular / --font-weight-semibold / --font-weight-bold / --font-weight-extrabold
+
+    If you want to tweak visuals, edit src/styles/theme.css (not this file) to preserve layout-only separation.
+*/
+
 :root {
-    --color-background: #f7f7f5;
-    --color-panel: #ffffff;
-    --color-border: #c9c9c7;
-    --color-text-primary: #2f2f2c;
-    --color-text-secondary: #535351;
-    --color-accent-red: #d4796b;
-    --color-accent-orange: #d89a62;
-    --color-accent-yellow: #d8c362;
-    --color-accent-green: #81b98a;
-    --color-accent-blue: #6aa7c7;
-    --color-accent-indigo: #6f7ec1;
-    --color-accent-violet: #9b7ebd;
-    --color-muted: #e0e0dd;
-    --color-success: #7ab37c;
-    --color-error: #d66a6a;
-    --shadow-soft: 0 8px 32px rgba(47, 47, 44, 0.08);
-    --transition-fast: 150ms ease;
-    --transition-medium: 250ms ease;
-    --font-family-base: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        /* Legacy aliases mapped to theme tokens */
+        --color-background: var(--color-bg);
+    --color-panel: var(--color-surface);
+    --color-text-primary: var(--color-text);
+    --color-text-secondary: var(--color-text-muted);
+    --color-accent-red: var(--accent-red);
+    --color-accent-orange: var(--accent-orange);
+    --color-accent-yellow: var(--accent-yellow);
+    --color-accent-green: var(--accent-green);
+    --color-accent-blue: var(--accent-blue);
+    --color-accent-indigo: var(--accent-indigo);
+    --color-accent-violet: var(--accent-violet);
+    --transition-fast: var(--ease-fast);
+    --transition-medium: var(--ease-medium);
 }
 
 * {
@@ -58,12 +64,12 @@ body {
 button {
     cursor: pointer;
     border: none;
-    border-radius: 12px;
+    border-radius: var(--btn-radius);
     padding: 0.65rem 1.3rem;
     font-size: 1rem;
     font-weight: 600;
-    background: var(--color-accent-green);
-    color: var(--color-panel);
+    background: var(--btn-bg);
+    color: var(--btn-color);
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
@@ -172,7 +178,7 @@ button:active:not(:disabled) {
     width: 100%;
     border-radius: 18px;
     overflow: hidden;
-    background: linear-gradient(135deg, rgba(218, 163, 120, 0.32), rgba(111, 126, 193, 0.32));
+    background: var(--promo-visual-gradient);
 }
 
 .game-card__visual img {
@@ -381,7 +387,7 @@ button:active:not(:disabled) {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(247, 247, 245, 0.78);
+    background: var(--overlay-bg);
     backdrop-filter: blur(2px);
     z-index: 40;
     opacity: 0;
@@ -434,7 +440,7 @@ button:active:not(:disabled) {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background: linear-gradient(180deg, rgba(215, 231, 236, 0.6), rgba(255, 255, 255, 0.9));
+    background: var(--stage-gradient);
 }
 
 @supports (height: 100svh) {
@@ -452,7 +458,7 @@ button:active:not(:disabled) {
     gap: 1rem;
     padding: 0.75rem 1.25rem;
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.88);
+    background: var(--panel-bg-alpha-weak);
     box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
     z-index: 15;
 }
@@ -507,12 +513,12 @@ button:active:not(:disabled) {
 }
 
 .game-stage__message.is-success {
-    background: rgba(122, 179, 124, 0.92);
+    background: var(--status-success-bg);
     color: #ffffff;
 }
 
 .game-stage__message.is-error {
-    background: rgba(214, 106, 106, 0.92);
+    background: var(--status-error-bg);
     color: #ffffff;
 }
 
@@ -527,13 +533,12 @@ button:active:not(:disabled) {
     display: block;
     /* make image fill the whole card; label will overlay on top */
     padding: 0;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-md);
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     touch-action: none;
     user-select: none;
     z-index: 10;
     overflow: hidden;
-    will-change: transform;
     cursor: grab;
 }
 .train-item--cab .train-item__label {
@@ -566,7 +571,7 @@ button:active:not(:disabled) {
     letter-spacing: 0.02em;
     color: #ffffff;
     text-align: center;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+    background: var(--label-ink-gradient);
     border-radius: 8px;
     pointer-events: none;
 }
@@ -578,9 +583,16 @@ button:active:not(:disabled) {
     line-height: 1;
 }
 .train-item.is-dragging {
-    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-elevated);
     z-index: 20;
     cursor: grabbing;
+    /* Оптимізуємо композитинг лише під час активного перетягування */
+    will-change: transform;
+}
+
+/* Останній відпущений елемент/група має лишатися поверх інших вагонів */
+.train-item.is-top {
+    z-index: 19;
 }
 
 .train-item.is-highlighted {
@@ -605,14 +617,15 @@ button:active:not(:disabled) {
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
     overflow: hidden;
     border: none;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
-    z-index: 18;
-    will-change: transform;
+    box-shadow: var(--shadow-sm);
+    z-index: 21;
 }
 
 /* Під час активного перетягування вимикаємо transition у замка, щоб не було «хвоста» */
 .game-stage.is-dragging .train-lock {
     transition: none !important;
+    /* Оптимізуємо композитинг локально на час drag */
+    will-change: transform;
 }
 
 .train-lock:hover {
@@ -632,7 +645,7 @@ button:active:not(:disabled) {
     padding: 1rem 1.5rem;
     background: rgba(255, 255, 255, 0.95);
     border-top: 1px solid var(--color-border);
-    box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-up-lg);
 }
 
 .train-locked-area__label {
@@ -656,7 +669,7 @@ button:active:not(:disabled) {
     aspect-ratio: 1 / 1;
     border-radius: 16px;
     background: var(--color-panel);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-lg);
     border: 2px solid transparent;
     display: flex;
     flex-direction: column;
@@ -686,7 +699,7 @@ button:active:not(:disabled) {
     text-transform: capitalize;
     color: #ffffff;
     text-align: center;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+    background: var(--label-ink-gradient);
     border-radius: 8px;
     pointer-events: none;
 }
@@ -702,12 +715,12 @@ button:active:not(:disabled) {
 
 .train-car.is-correct {
     border-color: var(--color-success);
-    box-shadow: 0 14px 28px rgba(122, 179, 124, 0.32);
+    box-shadow: var(--shadow-success-lg);
 }
 
 .train-car.is-error {
     border-color: var(--color-error);
-    box-shadow: 0 14px 28px rgba(214, 106, 106, 0.32);
+    box-shadow: var(--shadow-error-lg);
 }
 
 .question-panel {
@@ -716,7 +729,7 @@ button:active:not(:disabled) {
     left: 50%;
     transform: translateX(-50%);
     width: min(720px, calc(100% - 3rem));
-    background: rgba(255, 255, 255, 0.94);
+    background: var(--panel-bg-alpha);
     padding: 1.75rem 2rem;
     border-radius: 20px;
     box-shadow: var(--shadow-soft);
@@ -752,7 +765,7 @@ button:active:not(:disabled) {
     right: 1.5rem;
     top: 5.5rem;
     bottom: 1.5rem;
-    background: rgba(255, 255, 255, 0.93);
+    background: var(--panel-bg-alpha-93);
     border-radius: 20px;
     box-shadow: var(--shadow-soft);
     padding: 1.5rem;
@@ -813,7 +826,7 @@ button:active:not(:disabled) {
     color: #ffffff;
     line-height: 1.15;
     word-break: break-word;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+    background: var(--label-ink-gradient);
     border-radius: 8px;
     pointer-events: none;
 }
@@ -824,7 +837,7 @@ button:active:not(:disabled) {
 
 .memory-test__card.is-active {
     border-color: var(--color-accent-violet);
-    box-shadow: 0 12px 22px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-card-active);
 }
 
 .memory-test__feedback {
@@ -833,18 +846,18 @@ button:active:not(:disabled) {
     align-items: center;
     justify-content: center;
     border-radius: 14px;
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--ink-overlay-weak);
     color: var(--color-text-secondary);
     font-weight: 600;
 }
 
 .memory-test__feedback.is-success {
-    background: rgba(122, 179, 124, 0.18);
+    background: var(--success-weak);
     color: var(--color-success);
 }
 
 .memory-test__feedback.is-error {
-    background: rgba(214, 106, 106, 0.18);
+    background: var(--error-weak);
     color: var(--color-error);
 }
 
@@ -856,7 +869,7 @@ button:active:not(:disabled) {
     align-items: center;
     justify-content: center;
     gap: 2rem;
-    background: rgba(255, 255, 255, 0.92);
+    background: var(--panel-bg-alpha);
     z-index: 50;
     text-align: center;
     padding: 2rem;
@@ -888,8 +901,8 @@ button:active:not(:disabled) {
 
 .game-author-tag {
     padding: 0.35rem 0.75rem;
-    border-radius: 12px;
-    background: rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius-2);
+    background: var(--ink-overlay-05);
     color: var(--color-text-secondary);
     font-size: 0.85rem;
     font-weight: 600;

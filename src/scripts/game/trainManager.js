@@ -116,16 +116,19 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
     }
 
     function getNodeBox(node) {
-        // Keep sizes in sync with actual DOM (media queries, font changes, etc.)
-        try {
-            const rect = node.element.getBoundingClientRect?.();
-            if (rect && rect.width && rect.height) {
-                if (rect.width !== node.size.width || rect.height !== node.size.height) {
-                    node.size.width = rect.width;
-                    node.size.height = rect.height;
+        // Keep sizes in sync with actual DOM (media queries, font changes, etc.).
+        // IMPORTANT: Avoid layout reads during active drag to prevent forced reflow.
+        if (!state.isDragging) {
+            try {
+                const rect = node.element.getBoundingClientRect?.();
+                if (rect && rect.width && rect.height) {
+                    if (rect.width !== node.size.width || rect.height !== node.size.height) {
+                        node.size.width = rect.width;
+                        node.size.height = rect.height;
+                    }
                 }
-            }
-        } catch {}
+            } catch {}
+        }
         return {
             left: node.position.x,
             right: node.position.x + node.size.width,
@@ -248,13 +251,27 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
         const start = { x: event.clientX, y: event.clientY };
         const initialPositions = group.map(member => ({ id: member.id, x: member.position.x, y: member.position.y }));
 
+        // Throttle pointermove via rAF: aggregate last dx/dy and apply once per frame
+        let moveRaf = null;
+        let lastDx = 0;
+        let lastDy = 0;
         const handleMove = moveEvent => {
             try {
-                const dx = moveEvent.clientX - start.x;
-                const dy = moveEvent.clientY - start.y;
-                moveGroup(group, initialPositions, dx, dy);
-                // Пакетуємо оновлення підсвітки/замків в rAF для стабільного FPS
-                scheduleAfterMove(group);
+                lastDx = moveEvent.clientX - start.x;
+                lastDy = moveEvent.clientY - start.y;
+                if (moveRaf) {
+                    return;
+                }
+                moveRaf = requestAnimationFrame(() => {
+                    moveRaf = null;
+                    try {
+                        moveGroup(group, initialPositions, lastDx, lastDy);
+                        // Пакетуємо оновлення підсвітки/замків в rAF для стабільного FPS
+                        scheduleAfterMove(group);
+                    } catch (error) {
+                        logError('train.dragMoveRaf', error);
+                    }
+                });
             } catch (error) {
                 logError('train.dragMove', error);
             }
@@ -270,6 +287,13 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
             window.removeEventListener('pointermove', handleMove);
             window.removeEventListener('pointerup', handleUp);
             window.removeEventListener('pointercancel', handleCancel);
+            // Остання перетягувана група має лишатися поверх інших
+            try {
+                // Приберемо позначку зверху з усіх вагонів
+                nodes.forEach(n => n.element.classList.remove('is-top'));
+                // Піднімемо зверху лише поточну групу
+                group.forEach(member => member.element.classList.add('is-top'));
+            } catch {}
             group.forEach(member => member.element.classList.remove('is-dragging'));
             state.isDragging = false;
             clearHighlight();
@@ -280,6 +304,11 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
                 cancelAnimationFrame(afterMoveRaf);
                 afterMoveRaf = null;
                 pendingGroupForLocks = null;
+            }
+            // Скасовуємо запланований кадр для оновлення позицій, якщо ще не відпрацював
+            if (moveRaf) {
+                cancelAnimationFrame(moveRaf);
+                moveRaf = null;
             }
         };
 
