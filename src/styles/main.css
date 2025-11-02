@@ -109,6 +109,8 @@ button:active:not(:disabled) {
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    /* Soft rainbow overlay to add gentle color on home */
+    background-image: var(--home-bg-gradient);
 }
 
 @supports (height: 100svh) {
@@ -146,7 +148,7 @@ button:active:not(:disabled) {
     font-size: clamp(1.7rem, 3.8vw, 2.2rem);
     font-weight: 800;
     letter-spacing: 0.04em;
-    color: var(--color-text-primary);
+    color: var(--accent-indigo);
     /* Remove default h1 margins to avoid big gaps above/below */
     margin: 0;
 }
@@ -224,6 +226,7 @@ button:active:not(:disabled) {
     font-size: clamp(1.4rem, 3vw, 1.8rem);
     font-weight: 700;
     margin: 0;
+    color: var(--accent-violet);
 }
 
 .game-card__description {
@@ -240,7 +243,7 @@ button:active:not(:disabled) {
 
 .selector-section__label {
     font-weight: 700;
-    color: var(--color-text-secondary);
+    color: var(--accent-orange);
     /* Slightly larger selector labels for better readability */
     font-size: clamp(1.06rem, 1.8vw, 1.2rem);
 }
@@ -290,7 +293,7 @@ button:active:not(:disabled) {
 
 .home-footer {
     text-align: center;
-    color: var(--color-text-secondary);
+    color: var(--accent-indigo);
     font-size: clamp(0.75rem, 1.3vw, 0.88rem);
     padding-top: clamp(0.5rem, 1.3vh, 0.85rem);
 }

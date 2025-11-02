@@ -94,6 +94,12 @@
   --label-ink-gradient: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0));
   --stage-gradient: linear-gradient(180deg, rgba(250, 247, 242, 0.7), rgba(255, 247, 240, 0.9));
   --promo-visual-gradient: linear-gradient(135deg, rgba(177, 131, 122, 0.28), rgba(111, 164, 193, 0.28));
+  /* Home page soft rainbow overlay */
+  --home-bg-gradient: linear-gradient(135deg,
+    rgba(111, 164, 193, 0.12),  /* blue */
+    rgba(155, 126, 189, 0.12),  /* violet */
+    rgba(200, 151, 103, 0.12)   /* orange */
+  );
 
   /* Typography */
   --font-family-base: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
