@@ -150,7 +150,7 @@ button:active:not(:disabled) {
     font-size: clamp(1.7rem, 3.8vw, 2.2rem);
     font-weight: 800;
     letter-spacing: 0.04em;
-    color: var(--accent-blue); /* колір великого заголовка на головній (--accent-blue) */
+    color: var(--heading-color); /* головний заголовок: синій #1976D2 (token --heading-color) */
     /* Remove default h1 margins to avoid big gaps above/below */
     margin: 0;
 }
@@ -220,7 +220,7 @@ button:active:not(:disabled) {
 .game-card__tagline {
     margin: 0;
     font-weight: 800;
-    color: var(--accent-orange); /* колір підзаголовка картки (--accent-orange) */
+    color: var(--accent-text-strong); /* акцентна фраза (помаранчевий #E65100) */
     font-size: clamp(1rem, 1.6vw, 1.1rem);
 }
 
@@ -228,7 +228,7 @@ button:active:not(:disabled) {
     font-size: clamp(1.4rem, 3vw, 1.8rem);
     font-weight: 700;
     margin: 0;
-    color: var(--accent-red); /* головний заголовок картки (--accent-red) */
+    color: var(--heading-color); /* заголовок картки як h2 */
 }
 
 .game-card__description {
@@ -245,7 +245,7 @@ button:active:not(:disabled) {
 
 .selector-section__label {
     font-weight: 700;
-    color: var(--accent-orange); /* колір міток селекторів (--accent-orange) */
+    color: var(--subheading-color); /* підзаголовки секцій #F57C00 */
     /* Slightly larger selector labels for better readability */
     font-size: clamp(1.06rem, 1.8vw, 1.2rem);
 }
@@ -295,7 +295,7 @@ button:active:not(:disabled) {
 
 .home-footer {
     text-align: center;
-    color: var(--accent-indigo);
+    color: var(--service-text-color); /* службовий текст (автор/рік) */
     font-size: clamp(0.75rem, 1.3vw, 0.88rem);
     padding-top: clamp(0.5rem, 1.3vh, 0.85rem);
 }
@@ -767,7 +767,7 @@ button:active:not(:disabled) {
     font-weight: 700;
     margin: 0;
     font-size: 1.35rem;
-    color: var(--color-accent-blue);
+    color: var(--heading-color); /* заголовок у вікні питань */
 }
 
 .question-panel__progress {
@@ -794,7 +794,7 @@ button:active:not(:disabled) {
 .memory-test__title {
     margin: 0;
     font-weight: 700;
-    color: var(--accent-indigo);
+    color: var(--heading-color); /* заголовок у memory-test */
 }
 
 .memory-test__grid {
@@ -919,7 +919,7 @@ button:active:not(:disabled) {
     padding: 0.35rem 0.75rem;
     border-radius: var(--radius-2);
     background: var(--ink-overlay-05);
-    color: var(--color-text-secondary);
+    color: var(--service-text-color); /* службовий невідволікаючий текст */
     font-size: 0.85rem;
     font-weight: 600;
     backdrop-filter: blur(6px);
