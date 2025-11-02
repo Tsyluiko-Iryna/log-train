@@ -74,6 +74,8 @@ export function createSoundManager() {
         }
         if (!voicesLoadPromise) {
             voicesLoadPromise = new Promise(resolve => {
+                // Уникаємо TDZ: оголошуємо наперед, щоб onChange міг безпечно викликати clearTimeout
+                let fallbackTimer = null;
                 const pickVoice = () => {
                     try {
                         const voices = window.speechSynthesis.getVoices() || [];
@@ -103,7 +105,7 @@ export function createSoundManager() {
                     const onChange = () => {
                         if (pickVoice()) {
                             window.speechSynthesis.removeEventListener('voiceschanged', onChange);
-                            clearTimeout(fallbackTimer);
+                            if (fallbackTimer) { clearTimeout(fallbackTimer); }
                             resolve(selectedVoice);
                         }
                     };
@@ -112,12 +114,12 @@ export function createSoundManager() {
                     setTimeout(() => {
                         if (pickVoice()) {
                             window.speechSynthesis.removeEventListener('voiceschanged', onChange);
-                            clearTimeout(fallbackTimer);
+                            if (fallbackTimer) { clearTimeout(fallbackTimer); }
                             resolve(selectedVoice);
                         }
                     }, 250);
                     // Остаточний таймаут: говоримо без явного голосу
-                    const fallbackTimer = setTimeout(() => {
+                    fallbackTimer = setTimeout(() => {
                         try { window.speechSynthesis.removeEventListener('voiceschanged', onChange); } catch {}
                         voicesLoaded = true;
                         // залишаємо selectedVoice як null — браузер підбере дефолт
