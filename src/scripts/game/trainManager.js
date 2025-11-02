@@ -238,6 +238,8 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
 
     function beginDrag(node, event) {
         state.isDragging = true;
+        // Позначаємо стан перетягування на всій сцені — це дає змогу вимкнути transition у замків
+        try { stageEl.classList.add('is-dragging'); } catch {}
         const groupIds = Array.from(collectGroup(node.id));
         state.activeDragGroup = groupIds;
         const group = groupIds.map(id => nodes.get(id));
@@ -272,6 +274,7 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
             state.isDragging = false;
             clearHighlight();
             state.activeDragGroup = null;
+            try { stageEl.classList.remove('is-dragging'); } catch {}
             // Скасовуємо відкладені кадри оновлення після завершення перетягування
             if (afterMoveRaf) {
                 cancelAnimationFrame(afterMoveRaf);

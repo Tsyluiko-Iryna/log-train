@@ -610,6 +610,11 @@ button:active:not(:disabled) {
     will-change: transform;
 }
 
+/* Під час активного перетягування вимикаємо transition у замка, щоб не було «хвоста» */
+.game-stage.is-dragging .train-lock {
+    transition: none !important;
+}
+
 .train-lock:hover {
     background: #c6c6c4;
 }
