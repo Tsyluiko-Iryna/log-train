@@ -34,8 +34,8 @@ html, body {
     margin: 0;
     padding: 0;
     min-height: 100%;
-    background: var(--color-background);
-    color: var(--color-text-primary);
+    background: var(--color-background); /* фон сторінки (змінюється в theme.css --color-bg) */
+    color: var(--color-text-primary); /* основний колір тексту (щоб зробити весь текст чорним змінити --color-text в theme.css) */
     font-family: var(--font-family-base);
     overscroll-behavior: none;
 }
@@ -68,8 +68,8 @@ button {
     padding: 0.65rem 1.3rem;
     font-size: 1rem;
     font-weight: 600;
-    background: var(--btn-bg);
-    color: var(--btn-color);
+    background: var(--btn-bg); /* фон кнопок (змінити --btn-primary-bg / --btn-accent-bg у theme.css) */
+    color: var(--btn-color); /* колір тексту кнопок (--btn-primary-color) */
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
@@ -94,7 +94,7 @@ button:active:not(:disabled) {
 
 .link-like {
     background: transparent;
-    color: var(--link-color);
+    color: var(--link-color); /* колір лінків / тексту-посилання (--link-color) */
     box-shadow: none;
     padding: 0;
 }
@@ -110,7 +110,7 @@ button:active:not(:disabled) {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     /* Soft rainbow overlay to add gentle color on home */
-    background-image: var(--home-bg-gradient);
+    background-image: var(--home-bg-gradient); /* фон домівки — м'який рух кольорів під матовою шкірою */
 }
 
 @supports (height: 100svh) {
@@ -148,7 +148,7 @@ button:active:not(:disabled) {
     font-size: clamp(1.7rem, 3.8vw, 2.2rem);
     font-weight: 800;
     letter-spacing: 0.04em;
-    color: var(--accent-blue);
+    color: var(--accent-blue); /* колір великого заголовка на головній (--accent-blue) */
     /* Remove default h1 margins to avoid big gaps above/below */
     margin: 0;
 }
@@ -165,7 +165,7 @@ button:active:not(:disabled) {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: clamp(0.85rem, 1.8vh, 1.4rem);
     align-items: center;
-    background: var(--color-panel);
+    background: var(--color-panel); /* фон картки (змінити --color-surface у theme.css) */
     padding: clamp(0.95rem, 2vh, 1.45rem);
     border-radius: 18px;
     box-shadow: var(--shadow-soft);
@@ -218,7 +218,7 @@ button:active:not(:disabled) {
 .game-card__tagline {
     margin: 0;
     font-weight: 800;
-    color: var(--accent-orange);
+    color: var(--accent-orange); /* колір підзаголовка картки (--accent-orange) */
     font-size: clamp(1rem, 1.6vw, 1.1rem);
 }
 
@@ -226,7 +226,7 @@ button:active:not(:disabled) {
     font-size: clamp(1.4rem, 3vw, 1.8rem);
     font-weight: 700;
     margin: 0;
-    color: var(--accent-red);
+    color: var(--accent-red); /* головний заголовок картки (--accent-red) */
 }
 
 .game-card__description {
@@ -243,7 +243,7 @@ button:active:not(:disabled) {
 
 .selector-section__label {
     font-weight: 700;
-    color: var(--accent-orange);
+    color: var(--accent-orange); /* колір міток селекторів (--accent-orange) */
     /* Slightly larger selector labels for better readability */
     font-size: clamp(1.06rem, 1.8vw, 1.2rem);
 }
@@ -255,8 +255,8 @@ button:active:not(:disabled) {
 }
 
 .selector-grid button {
-    background: var(--chip-bg);
-    color: var(--chip-color);
+    background: var(--chip-bg); /* фон кнопок-селекторів (--chip-bg) */
+    color: var(--chip-color); /* текст у селекторах (--chip-color) */
     border: 2px solid transparent;
     box-shadow: none;
     /* Slightly larger buttons text */
@@ -267,8 +267,8 @@ button:active:not(:disabled) {
 }
 
 .selector-grid button.is-active {
-    border-color: var(--chip-active-border);
-    background: var(--chip-active-bg);
+    border-color: var(--chip-active-border); /* бордер активного селектора */
+    background: var(--chip-active-bg); /* фон активного селектора */
 }
 
 .home-actions {
@@ -390,7 +390,7 @@ button:active:not(:disabled) {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--overlay-bg);
+    background: var(--overlay-bg); /* фон оверлея-завантаження (opacity/колір в theme.css) */
     backdrop-filter: blur(2px);
     z-index: 40;
     opacity: 0;
@@ -443,7 +443,7 @@ button:active:not(:disabled) {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background: var(--stage-gradient);
+    background: var(--stage-gradient); /* фон сцени — градієнт рухомих кольорів (змінити тут) */
 }
 
 @supports (height: 100svh) {
@@ -461,7 +461,7 @@ button:active:not(:disabled) {
     gap: 1rem;
     padding: 0.75rem 1.25rem;
     border-radius: 16px;
-    background: var(--panel-bg-alpha-weak);
+    background: var(--panel-bg-alpha-weak); /* фон верхнього меню/панелі (змінити --panel-bg-alpha-weak) */
     box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
     z-index: 15;
 }
@@ -475,8 +475,8 @@ button:active:not(:disabled) {
 .game-toolbar__action--back {
     grid-column: 1;
     justify-self: start;
-    background: var(--btn-secondary-bg);
-    color: var(--btn-secondary-color);
+    background: var(--btn-secondary-bg); /* фон кнопки "назад" (--btn-secondary-bg) */
+    color: var(--btn-secondary-color); /* колір тексту на кнопці "назад" */
 }
 
 .game-toolbar__action--check {
@@ -518,7 +518,7 @@ button:active:not(:disabled) {
 }
 
 .game-stage__message.is-success {
-    background: var(--status-success-bg);
+    background: var(--status-success-bg); /* фон центрального повідомлення успіху (--status-success-bg) */
     color: #ffffff;
 }
 
@@ -533,7 +533,7 @@ button:active:not(:disabled) {
     width: clamp(104px, 16vw, 160px);
     height: clamp(104px, 16vw, 160px);
     border-radius: 18px;
-    background: var(--color-panel);
+    background: var(--color-panel); /* фон вагончика/елемента (--color-surface / --color-panel) */
     border: 2px solid transparent;
     display: block;
     /* make image fill the whole card; label will overlay on top */
@@ -601,7 +601,7 @@ button:active:not(:disabled) {
 }
 
 .train-item.is-highlighted {
-    border-color: var(--color-accent-green);
+    border-color: var(--color-accent-green); /* бордер підсвіченого елементу (акцент зелений) */
 }
 
 .train-item.is-blocked {
@@ -614,7 +614,7 @@ button:active:not(:disabled) {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: var(--lock-bg);
+    background: var(--lock-bg); /* фон іконки замка (--lock-bg) */
     display: flex;
     align-items: center;
     /* image fills the card, label overlays */
@@ -648,7 +648,7 @@ button:active:not(:disabled) {
     bottom: 0;
     min-height: 220px;
     padding: 1rem 1.5rem;
-    background: var(--locked-area-bg);
+    background: var(--locked-area-bg); /* фон області блокування (--locked-area-bg) */
     border-top: 1px solid var(--color-border);
     box-shadow: var(--shadow-up-lg);
 }

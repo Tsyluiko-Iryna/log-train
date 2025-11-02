@@ -55,50 +55,50 @@
 
 :root {
   /* Palette (Pastel Meadow) */
-  --color-bg: #FAF7F2;            /* warm soft background */
-  --color-surface: #FFFAF5;        /* softly tinted near-white panels/cards */
-  --color-surface-muted: #FFF3EA;  /* warmer subtle surface variant */
-  --color-border: #8E8A82;         /* UI borders (>=3:1 vs surface) */
+  --color-bg: #FAF7F2;            /* фон сторінки — змінити тут */
+  --color-surface: #FFFAF5;        /* фон карток/панелей — змінити тут */
+  --color-surface-muted: #FFF3EA;  /* фон менш важливих панелей — змінити тут */
+  --color-border: #8E8A82;         /* колір меж/бордерів — змінити тут */
 
-  --color-text: #4B4A46;           /* warm dark grey (not black), AA on light surfaces */
-  --color-text-muted: #7A7872;     /* softer secondary */
+  --color-text: #4B4A46;           /* основний текст (змінити щоб зробити весь текст чорним) */
+  --color-text-muted: #7A7872;     /* допоміжний текст/підказки — змінити тут */
 
   /* Accents */
-  --accent-red: #F2695A;           /* coral red (friendly) */
-  --accent-orange: #FFA76A;        /* peachy orange */
-  --accent-yellow: #F2C94C;        /* sunflower */
-  --accent-green: #2FA36B;         /* fresh green for primary actions */
-  --accent-blue: #73B9F2;          /* sky blue for links/headers */
-  --accent-indigo: #6D85F5;        /* cornflower for focus/headers */
-  --accent-violet: #C39BED;        /* soft violet */
+  --accent-red: #F2695A;           /* акцент — червоний (помилковий) — змінити тут */
+  --accent-orange: #FFA76A;        /* акцент — помаранчевий (тег/підзаголовок) */
+  --accent-yellow: #F2C94C;        /* акцент — жовтий (маркери/піктограми) */
+  --accent-green: #2FA36B;         /* акцент — зелений (успіх/кнопки) */
+  --accent-blue: #73B9F2;          /* акцент — блакитний (головні заголовки) */
+  --accent-indigo: #6D85F5;        /* акцент — індиго (фокус/сповіщення) */
+  --accent-violet: #C39BED;        /* акцент — фіолетовий (декор) */
 
   --color-muted: #E0E0DD;
 
   /* State colors */
-  --color-success: #2E9D6E;        /* pleasant green (clear, not neon) */
-  --color-error: #E25B5B;          /* pleasant red */
-  --color-info: #3D7FA6;           /* deeper sky blue for info */
-  --color-warning: #E2A642;        /* warmer warning */
+  --color-success: #2E9D6E;        /* колір успіху — зелений (змінити тут) */
+  --color-error: #E25B5B;          /* колір помилки — червоний (змінити тут) */
+  --color-info: #3D7FA6;           /* інформаційні акценти */
+  --color-warning: #E2A642;        /* попередження */
 
   /* Overlays / alpha presets */
-  --overlay-bg: rgba(250, 247, 242, 0.78);               /* loader overlay */
-  --panel-bg-alpha: rgba(255, 250, 245, 0.95);           /* question panel (near-white tint) */
-  --panel-bg-alpha-weak: rgba(255, 250, 245, 0.9);       /* toolbar (tinted) */
-  --panel-bg-alpha-93: rgba(255, 250, 245, 0.93);        /* memory test (tinted) */
-  --status-success-bg: rgba(46, 157, 110, 0.92);
-  --status-error-bg: rgba(226, 91, 91, 0.92);
-  --success-weak: rgba(46, 157, 110, 0.18);
-  --error-weak: rgba(226, 91, 91, 0.18);
+  --overlay-bg: rgba(250, 247, 242, 0.78);               /* фон оверлея/завантаження */
+  --panel-bg-alpha: rgba(255, 250, 245, 0.95);           /* фон поп-ап/вікна питань — змінити тут */
+  --panel-bg-alpha-weak: rgba(255, 250, 245, 0.9);       /* фон тулбарів/меню — змінити тут */
+  --panel-bg-alpha-93: rgba(255, 250, 245, 0.93);        /* фон memory-test — змінити тут */
+  --status-success-bg: rgba(46, 157, 110, 0.92);         /* фон головного повідомлення успіху */
+  --status-error-bg: rgba(226, 91, 91, 0.92);            /* фон головного повідомлення помилки */
+  --success-weak: rgba(46, 157, 110, 0.18);              /* слабкий фон для success-блоків */
+  --error-weak: rgba(226, 91, 91, 0.18);                 /* слабкий фон для error-блоків */
   --ink-overlay-weak: rgba(0, 0, 0, 0.04);
   --ink-overlay-05: rgba(0, 0, 0, 0.05);
   --label-ink-gradient: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0));
-  --stage-gradient: linear-gradient(180deg, rgba(190, 226, 255, 0.45), rgba(255, 245, 235, 0.9));
-  --promo-visual-gradient: linear-gradient(135deg, rgba(255, 167, 106, 0.28), rgba(115, 185, 242, 0.28));
+  --stage-gradient: linear-gradient(180deg, rgba(190, 226, 255, 0.45), rgba(255, 245, 235, 0.9)); /* фон сцени — градієнт рухомих кольорів під матовим покриттям */
+  --promo-visual-gradient: linear-gradient(135deg, rgba(255, 167, 106, 0.28), rgba(115, 185, 242, 0.28)); /* фон візуальної карти */
   /* Home page soft rainbow overlay */
   --home-bg-gradient: linear-gradient(135deg,
-    rgba(115, 185, 242, 0.16),  /* sky blue */
-    rgba(195, 155, 237, 0.12),  /* soft violet */
-    rgba(255, 167, 106, 0.16)   /* peachy orange */
+    rgba(115, 185, 242, 0.16),  /* sky blue — змінити тут */
+    rgba(195, 155, 237, 0.12),  /* soft violet — змінити тут */
+    rgba(255, 167, 106, 0.16)   /* peachy orange — змінити тут */
   );
 
   /* Typography */
@@ -143,31 +143,31 @@
 
   /* Component tokens */
   /* Buttons */
-  --btn-primary-bg: var(--accent-green);
-  --btn-primary-color: var(--color-surface);
-  --btn-secondary-bg: #3D7FA6;         /* deeper sky blue for contrast */
+  --btn-primary-bg: var(--accent-green); /* колір основної кнопки — змінити тут */
+  --btn-primary-color: var(--color-surface); /* колір тексту на основній кнопці */
+  --btn-secondary-bg: #3D7FA6;         /* колір кнопки "назад" — змінити тут */
   --btn-secondary-color: var(--color-surface);
-  --btn-accent-bg: var(--accent-orange);
-  --btn-accent-color: var(--color-text); /* better contrast on warm bg */
+  --btn-accent-bg: var(--accent-orange); /* акцентна кнопка (наприклад, почати гру) */
+  --btn-accent-color: var(--color-text); /* текст на акцентній кнопці */
   --btn-radius: var(--radius-2);
   /* Back-compat */
   --btn-bg: var(--btn-primary-bg);
   --btn-color: var(--btn-primary-color);
 
   /* Links */
-  --link-color: var(--accent-blue);
+  --link-color: var(--accent-blue); /* колір посилань / лінків — змінити тут */
 
   /* Chips / selector buttons */
-  --chip-bg: var(--color-surface);
-  --chip-color: var(--color-text);
-  --chip-active-border: var(--accent-blue);
-  --chip-active-bg: rgba(111, 164, 193, 0.18);
+  --chip-bg: var(--color-surface); /* фон селекторів/чіпів */
+  --chip-color: var(--color-text); /* текст всередині чіпів */
+  --chip-active-border: var(--accent-blue); /* бордер підсвіченого чіпу */
+  --chip-active-bg: rgba(111, 164, 193, 0.18); /* фон активного чіпу */
 
   /* Locks and locked area */
-  --lock-bg: #d4d4d2;
-  --lock-hover-bg: #c6c6c4;
-  --lock-active-bg: #b8b8b6;
-  --locked-area-bg: rgba(255, 247, 240, 0.95);
+  --lock-bg: #d4d4d2; /* фон іконки замка */
+  --lock-hover-bg: #c6c6c4; /* фон замка при ховері */
+  --lock-active-bg: #b8b8b6; /* фон замка при натисканні */
+  --locked-area-bg: rgba(255, 247, 240, 0.95); /* фон області з заблокованими вагонами */
 }
 
 /* Dark theme (optional) */
