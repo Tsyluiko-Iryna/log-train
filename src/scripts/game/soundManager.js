@@ -103,6 +103,7 @@ export function createSoundManager() {
                     const onChange = () => {
                         if (pickVoice()) {
                             window.speechSynthesis.removeEventListener('voiceschanged', onChange);
+                            clearTimeout(fallbackTimer);
                             resolve(selectedVoice);
                         }
                     };
@@ -111,9 +112,17 @@ export function createSoundManager() {
                     setTimeout(() => {
                         if (pickVoice()) {
                             window.speechSynthesis.removeEventListener('voiceschanged', onChange);
+                            clearTimeout(fallbackTimer);
                             resolve(selectedVoice);
                         }
                     }, 250);
+                    // Остаточний таймаут: говоримо без явного голосу
+                    const fallbackTimer = setTimeout(() => {
+                        try { window.speechSynthesis.removeEventListener('voiceschanged', onChange); } catch {}
+                        voicesLoaded = true;
+                        // залишаємо selectedVoice як null — браузер підбере дефолт
+                        resolve(null);
+                    }, 900);
                     return;
                 }
                 resolve(selectedVoice);
@@ -136,7 +145,14 @@ export function createSoundManager() {
             utter.volume = 1.0;
             // Скасовуємо попереднє, щоб уникати накладань
             try { window.speechSynthesis.cancel(); } catch {}
-            window.speechSynthesis.speak(utter);
+            // Невелика затримка після cancel() у Chrome, щоб уникнути "проковтування" першого utterance
+            setTimeout(() => {
+                try {
+                    window.speechSynthesis.speak(utter);
+                } catch (e) {
+                    logError('tts.speak invoke', e);
+                }
+            }, 30);
         } catch (error) {
             logError('tts.speakWord', error);
         }
