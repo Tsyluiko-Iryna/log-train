@@ -111,6 +111,8 @@ button:active:not(:disabled) {
     -webkit-overflow-scrolling: touch;
     /* Soft rainbow overlay to add gentle color on home */
     background-image: var(--home-bg-gradient); /* фон домівки — м'який рух кольорів під матовою шкірою */
+    background-size: 200% 200%; /* збільшений градієнт для ефекту руху під "матовим" склом */
+    animation: bg-drift 28s ease-in-out infinite alternate; /* плавний рух кольорів */
 }
 
 @supports (height: 100svh) {
@@ -438,12 +440,21 @@ button:active:not(:disabled) {
     to { transform: rotate(360deg); }
 }
 
+/* Плавний рух градієнта, який створює враження кольорів під матовим склом */
+@keyframes bg-drift {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 100%; }
+}
+
 .game-stage {
     position: relative;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
     background: var(--stage-gradient); /* фон сцени — градієнт рухомих кольорів (змінити тут) */
+    background-size: 200% 200%;
+    animation: bg-drift 36s ease-in-out infinite alternate; /* повільніший рух для сцени */
 }
 
 @supports (height: 100svh) {
