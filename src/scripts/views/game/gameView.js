@@ -159,26 +159,34 @@ export default async function renderGame(appRoot, context) {
             text: texts.game.back,
             attrs: { type: 'button' },
         });
+        const info = createElement('div', {
+            classes: 'game-toolbar__info',
+            text: texts.game.infoTemplate(letter, type),
+        });
         const checkButton = createElement('button', {
             classes: ['game-toolbar__action', 'game-toolbar__action--check'],
             text: texts.game.check,
             attrs: { type: 'button' },
         });
-        toolbar.append(backButton, checkButton);
-
-        // Службовий текст під меню (статус/підказка)
-        const substatus = createElement('div', {
-            classes: 'game-status',
-            text: texts.game.infoTemplate(letter, type),
-        });
+        toolbar.append(backButton, info, checkButton);
 
         // A11y: живий регіон для коротких статусних повідомлень (без зміни візуальної логіки)
         const message = createElement('div', {
             classes: 'game-stage__message',
             attrs: { role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' },
         });
-        // На сторінці гри не показуємо автора і правовий текст
-        stage.append(toolbar, substatus, message);
+        const footer = createElement('div', { classes: 'game-footer' });
+        const authorTag = createElement('div', {
+            classes: 'game-author-tag',
+            text: texts.game.authorPlaceholder,
+        });
+        const legalTag = createElement('div', {
+            classes: 'game-author-tag',
+            text: texts.legal,
+        });
+        footer.append(authorTag, legalTag);
+
+        stage.append(toolbar, message, footer);
         appRoot.append(stage);
 
     // Ініціалізуємо менеджер звуку: короткі сигнали успіху/помилки та зчеплення

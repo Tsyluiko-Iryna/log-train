@@ -1,5 +1,5 @@
 import { createElement } from '../utils/dom.js';
-import { logError, logInfo } from '../utils/logger.js';
+import { logError } from '../utils/logger.js';
 import { getImageUrl } from '../utils/assets.js';
 import { clamp, nextFrame, randomPosition } from './helpers.js';
 
