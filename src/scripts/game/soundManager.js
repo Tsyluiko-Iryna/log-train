@@ -2,6 +2,10 @@ import { logError } from '../utils/logger.js';
 
 export function createSoundManager() {
     let audioContext = null;
+    // Web Speech API TTS
+    let selectedVoice = null;
+    let voicesLoaded = false;
+    let voicesLoadPromise = null;
 
     function ensureContext() {
         try {
@@ -60,6 +64,84 @@ export function createSoundManager() {
         }
     }
 
+    // ---- Text-to-Speech (Web Speech API) ----
+    function ensureVoices() {
+        if (voicesLoaded && selectedVoice) {
+            return Promise.resolve(selectedVoice);
+        }
+        if (!('speechSynthesis' in window)) {
+            return Promise.resolve(null);
+        }
+        if (!voicesLoadPromise) {
+            voicesLoadPromise = new Promise(resolve => {
+                const pickVoice = () => {
+                    try {
+                        const voices = window.speechSynthesis.getVoices() || [];
+                        if (!voices.length) {
+                            return false;
+                        }
+                        // Пріоритет: жіночий uk-UA (часто "Google українська"), інакше перший uk-UA, інакше перший доступний
+                        const isUk = v => (v.lang || '').toLowerCase().startsWith('uk');
+                        // Жендер не стандартизований у Web Speech, намагаємося за назвою
+                        const looksFemale = v => /female|жіноч/i.test(v.name || '');
+                        let candidate = voices.find(v => isUk(v) && /google/i.test(v.name) && looksFemale(v))
+                                      || voices.find(v => isUk(v) && looksFemale(v))
+                                      || voices.find(v => isUk(v))
+                                      || voices[0] || null;
+                        selectedVoice = candidate || null;
+                        voicesLoaded = true;
+                        return true;
+                    } catch (e) {
+                        logError('tts.pickVoice', e);
+                        selectedVoice = null;
+                        voicesLoaded = true;
+                        return true;
+                    }
+                };
+                // Деякі браузери завантажують голоси асинхронно
+                if (!pickVoice()) {
+                    const onChange = () => {
+                        if (pickVoice()) {
+                            window.speechSynthesis.removeEventListener('voiceschanged', onChange);
+                            resolve(selectedVoice);
+                        }
+                    };
+                    window.speechSynthesis.addEventListener('voiceschanged', onChange);
+                    // Резерв: спробувати ще раз через мікрозатримку
+                    setTimeout(() => {
+                        if (pickVoice()) {
+                            window.speechSynthesis.removeEventListener('voiceschanged', onChange);
+                            resolve(selectedVoice);
+                        }
+                    }, 250);
+                    return;
+                }
+                resolve(selectedVoice);
+            });
+        }
+        return voicesLoadPromise;
+    }
+
+    async function speakWord(text) {
+        try {
+            if (!text || !('speechSynthesis' in window)) {
+                return;
+            }
+            await ensureVoices();
+            const utter = new SpeechSynthesisUtterance(String(text));
+            utter.lang = (selectedVoice && selectedVoice.lang) || 'uk-UA';
+            utter.voice = selectedVoice || null;
+            utter.rate = 1.0;
+            utter.pitch = 1.0;
+            utter.volume = 1.0;
+            // Скасовуємо попереднє, щоб уникати накладань
+            try { window.speechSynthesis.cancel(); } catch {}
+            window.speechSynthesis.speak(utter);
+        } catch (error) {
+            logError('tts.speakWord', error);
+        }
+    }
+
     return {
         playSuccess() {
             playTone({ frequency: 880, duration: 0.2, type: 'triangle', volume: 0.22 });
@@ -74,6 +156,7 @@ export function createSoundManager() {
             playTone({ frequency: 520, duration: 0.07, type: 'square', volume: 0.18, fade: true });
             setTimeout(() => playTone({ frequency: 780, duration: 0.08, type: 'triangle', volume: 0.16, fade: true }), 40);
         },
+        speakWord,
         // Нова можливість: вручну відпустити аудіо-ресурси після завершення гри
         dispose,
     };
