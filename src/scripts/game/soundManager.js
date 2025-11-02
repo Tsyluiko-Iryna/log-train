@@ -1,4 +1,4 @@
-import { logError } from '../utils/logger.js';
+import { logError, logInfo } from '../utils/logger.js';
 
 export function createSoundManager() {
     let audioContext = null;
@@ -91,6 +91,11 @@ export function createSoundManager() {
                                       || voices.find(v => isUk(v))
                                       || voices[0] || null;
                         selectedVoice = candidate || null;
+                        if (selectedVoice) {
+                            logInfo('tts.voices', 'Selected voice', { name: selectedVoice.name, lang: selectedVoice.lang });
+                        } else {
+                            logInfo('tts.voices', 'No explicit voice selected, will rely on default');
+                        }
                         voicesLoaded = true;
                         return true;
                     } catch (e) {
@@ -123,6 +128,7 @@ export function createSoundManager() {
                         try { window.speechSynthesis.removeEventListener('voiceschanged', onChange); } catch {}
                         voicesLoaded = true;
                         // залишаємо selectedVoice як null — браузер підбере дефолт
+                        logInfo('tts.voices', 'Fallback timeout reached, using default voice');
                         resolve(null);
                     }, 900);
                     return;
@@ -136,21 +142,28 @@ export function createSoundManager() {
     async function speakWord(text) {
         try {
             if (!text || !('speechSynthesis' in window)) {
+                if (!('speechSynthesis' in window)) {
+                    logInfo('tts.speak', 'speechSynthesis not supported');
+                }
                 return;
             }
-            await ensureVoices();
+            const voice = await ensureVoices();
             const utter = new SpeechSynthesisUtterance(String(text));
             utter.lang = (selectedVoice && selectedVoice.lang) || 'uk-UA';
             utter.voice = selectedVoice || null;
             utter.rate = 1.0;
             utter.pitch = 1.0;
             utter.volume = 1.0;
+            logInfo('tts.speak', 'Attempt speak', { text, lang: utter.lang, voice: voice ? { name: voice.name, lang: voice.lang } : null });
+            utter.onend = () => logInfo('tts.onend', 'Utterance finished', { text });
+            utter.onerror = (e) => logError('tts.onerror', e.error || e);
             // Скасовуємо попереднє, щоб уникати накладань
             try { window.speechSynthesis.cancel(); } catch {}
             // Невелика затримка після cancel() у Chrome, щоб уникнути "проковтування" першого utterance
             setTimeout(() => {
                 try {
                     window.speechSynthesis.speak(utter);
+                    logInfo('tts.speak', 'Speak invoked');
                 } catch (e) {
                     logError('tts.speak invoke', e);
                 }

@@ -1,5 +1,5 @@
 import { createElement } from '../utils/dom.js';
-import { logError } from '../utils/logger.js';
+import { logError, logInfo } from '../utils/logger.js';
 import { getImageUrl } from '../utils/assets.js';
 import { clamp, nextFrame, randomPosition } from './helpers.js';
 
@@ -236,7 +236,8 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
                     const now = Date.now();
                     if (now - lastSpeakAt.t > 300) { // простий гвард від повторів
                         lastSpeakAt.t = now;
-                        try { soundManager?.speakWord?.(node.text); } catch {}
+                        logInfo('tts.trigger', 'pointerdown wagon', { word: node.text });
+                        try { soundManager?.speakWord?.(node.text); } catch (e) { logError('tts.trigger', e); }
                     }
                 }
                 event.preventDefault();
