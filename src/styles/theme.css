@@ -136,9 +136,32 @@
   --z-items: 10;
 
   /* Component tokens */
-  --btn-bg: var(--accent-green);
-  --btn-color: var(--color-surface);
+  /* Buttons */
+  --btn-primary-bg: var(--accent-green);
+  --btn-primary-color: var(--color-surface);
+  --btn-secondary-bg: #3D7FA6;         /* deeper blue for contrast */
+  --btn-secondary-color: var(--color-surface);
+  --btn-accent-bg: var(--accent-orange);
+  --btn-accent-color: var(--color-text); /* better contrast on warm bg */
   --btn-radius: var(--radius-2);
+  /* Back-compat */
+  --btn-bg: var(--btn-primary-bg);
+  --btn-color: var(--btn-primary-color);
+
+  /* Links */
+  --link-color: var(--accent-blue);
+
+  /* Chips / selector buttons */
+  --chip-bg: var(--color-surface);
+  --chip-color: var(--color-text);
+  --chip-active-border: var(--accent-blue);
+  --chip-active-bg: rgba(111, 164, 193, 0.18);
+
+  /* Locks and locked area */
+  --lock-bg: #d4d4d2;
+  --lock-hover-bg: #c6c6c4;
+  --lock-active-bg: #b8b8b6;
+  --locked-area-bg: rgba(255, 255, 255, 0.95);
 }
 
 /* Dark theme (optional) */
