@@ -223,21 +223,21 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
     }
 
     function bindDragEvents(node) {
-        // Захист від повторних озвучок при довгому натисканні/перетягуванні
+        // Захист від повторних програвань при довгому натисканні/перетягуванні
         const lastSpeakAt = { t: 0 };
         const handlePointerDown = event => {
             try {
                 if (state.frozen || !event.isPrimary) {
                     return;
                 }
-                // Озвучка слова ЖІНОЧИМ голосом під час натискання, лише у фазі збирання поїзда
+                // Програвання файлу слова під час натискання, лише у фазі збирання поїзда
                 // (цей менеджер існує тільки у фазі assemble; в інших фазах він знищується у gameView)
                 if (node.type === 'wagon') {
                     const now = Date.now();
                     if (now - lastSpeakAt.t > 300) { // простий гвард від повторів
                         lastSpeakAt.t = now;
-                        logInfo('tts.trigger', 'pointerdown wagon', { word: node.text });
-                        try { soundManager?.speakWord?.(node.text); } catch (e) { logError('tts.trigger', e); }
+                        logInfo('audio.trigger', 'pointerdown wagon', { word: node.text });
+                        try { soundManager?.speakWord?.(node.text); } catch (e) { logError('audio.trigger', e); }
                     }
                 }
                 event.preventDefault();

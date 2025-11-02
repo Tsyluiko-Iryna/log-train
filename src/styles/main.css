@@ -121,9 +121,10 @@ button:active:not(:disabled) {
 }
 
 .home-container {
-    max-width: 1080px;
-    width: min(100%, 1080px);
-    margin: 0 auto;
+    /* Make the home page use full width without artificial container caps */
+    max-width: none;
+    width: 100%;
+    margin: 0;
     min-height: 100vh;
     display: grid;
     grid-template-rows: auto auto auto auto 1fr auto;
@@ -133,6 +134,45 @@ button:active:not(:disabled) {
     transform-origin: top center;
     will-change: transform;
     transition: transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 160ms ease;
+}
+
+/* Respect safe areas on modern phones (notches, rounded corners) */
+.home-scale-wrapper {
+    padding-left: max(env(safe-area-inset-left), 0px);
+    padding-right: max(env(safe-area-inset-right), 0px);
+    padding-top: max(env(safe-area-inset-top), 0px);
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
+/* Mobile-first: avoid scaling transforms on small screens; let the page scroll vertically */
+@media (max-width: 600px) {
+    /* Allow vertical scroll on phones; keep horizontal overflow hidden */
+    html, body {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+    .home-container {
+        transform: none !important;
+        will-change: auto;
+    }
+}
+
+/* Finer tuning for common phone widths */
+@media (max-width: 480px) {
+    .home-header__subtitle { max-width: none; }
+    .selector-grid { gap: 0.6rem; }
+    .selector-grid button { padding: 0.5rem 0.8rem; min-height: 44px; }
+    .home-actions { padding-top: 0.5rem; }
+}
+
+@media (max-width: 390px) {
+    .game-card { gap: 0.75rem; }
+    .game-card__body { gap: 0.8rem; }
+}
+
+@media (max-width: 360px) {
+    .home-container { padding-left: 0.8rem; padding-right: 0.8rem; }
+    .selector-grid { gap: 0.5rem; }
 }
 
 .home-header {
@@ -208,6 +248,24 @@ button:active:not(:disabled) {
 }
 @media (max-height: 640px) {
     .game-card__visual { aspect-ratio: 2 / 1; }
+}
+/* Very short windows on desktop: limit hero visual height so it doesn't dominate */
+@media (max-height: 520px) {
+    .game-card__visual {
+        /* Stop enforcing ratio; use a capped responsive height instead */
+        aspect-ratio: auto;
+        height: clamp(92px, 28vh, 180px);
+    }
+}
+@media (max-height: 360px) {
+    .game-card__visual {
+        height: clamp(80px, 24vh, 140px);
+    }
+}
+@media (max-height: 120px) {
+    .game-card__visual {
+        height: 72px; /* emergency cap for ultra-short viewports (PC optimization panes) */
+    }
 }
 
 .game-card__body {

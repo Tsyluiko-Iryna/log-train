@@ -2,10 +2,10 @@ import { logError, logInfo } from '../utils/logger.js';
 
 export function createSoundManager() {
     let audioContext = null;
-    // Web Speech API TTS
-    let selectedVoice = null;
-    let voicesLoaded = false;
-    let voicesLoadPromise = null;
+    // Simple audio player for pre-recorded word sounds
+    const audioCache = new Map(); // key: word (lowercased) -> HTMLAudioElement
+    let currentAudio = null;
+    let lastPlayTs = 0;
 
     function ensureContext() {
         try {
@@ -64,133 +64,72 @@ export function createSoundManager() {
         }
     }
 
-    // ---- Text-to-Speech (Web Speech API) ----
-    function ensureVoices() {
-        if (voicesLoaded && selectedVoice) {
-            return Promise.resolve(selectedVoice);
+    // ---- Word audio playback ----
+    function getWordKey(text) {
+        return String(text || '').trim().toLowerCase();
+    }
+
+    function getWordUrl(text) {
+        const key = getWordKey(text);
+        try {
+            // Файли очікуються у src/audio/words/{слово}.mp3 (у нижньому регістрі)
+            return new URL(`../../audio/words/${encodeURIComponent(key)}.mp3`, import.meta.url).href;
+        } catch {
+            return '';
         }
-        if (!('speechSynthesis' in window)) {
-            return Promise.resolve(null);
+    }
+
+    function getAudioForWord(text) {
+        const key = getWordKey(text);
+        let audio = audioCache.get(key);
+        if (!audio) {
+            const src = getWordUrl(key);
+            audio = new Audio(src);
+            audio.preload = 'auto';
+            audioCache.set(key, audio);
         }
-        if (!voicesLoadPromise) {
-            voicesLoadPromise = new Promise(resolve => {
-                // Уникаємо TDZ: оголошуємо наперед, щоб onChange міг безпечно викликати clearTimeout
-                let fallbackTimer = null;
-                const pickVoice = () => {
-                    try {
-                        const voices = window.speechSynthesis.getVoices() || [];
-                        if (!voices.length) {
-                            return false;
-                        }
-                        // Пріоритет: жіночий uk-UA (часто "Google українська"), далі будь-який uk-UA,
-                        // потім жіночий ru-RU, будь-який ru-RU, потім жіночий en-US, далі будь-який, і лише потім перший доступний
-                        const isUk = v => (v.lang || '').toLowerCase().startsWith('uk');
-                        const isRu = v => (v.lang || '').toLowerCase().startsWith('ru');
-                        const isEn = v => (v.lang || '').toLowerCase().startsWith('en');
-                        // Жендер не стандартизований у Web Speech, намагаємося за назвою
-                        const looksFemale = v => /female|жіноч/i.test(v.name || '');
-                        let candidate = voices.find(v => isUk(v) && /google/i.test(v.name) && looksFemale(v))
-                                      || voices.find(v => isUk(v) && looksFemale(v))
-                                      || voices.find(v => isUk(v))
-                                      || voices.find(v => isRu(v) && looksFemale(v))
-                                      || voices.find(v => isRu(v))
-                                      || voices.find(v => isEn(v) && looksFemale(v))
-                                      || voices.find(v => isEn(v))
-                                      || voices[0] || null;
-                        selectedVoice = candidate || null;
-                        if (selectedVoice) {
-                            logInfo('tts.voices', 'Selected voice', { name: selectedVoice.name, lang: selectedVoice.lang });
-                        } else {
-                            logInfo('tts.voices', 'No explicit voice selected, will rely on default');
-                        }
-                        voicesLoaded = true;
-                        return true;
-                    } catch (e) {
-                        logError('tts.pickVoice', e);
-                        selectedVoice = null;
-                        voicesLoaded = true;
-                        return true;
-                    }
-                };
-                // Деякі браузери завантажують голоси асинхронно
-                if (!pickVoice()) {
-                    const onChange = () => {
-                        if (pickVoice()) {
-                            window.speechSynthesis.removeEventListener('voiceschanged', onChange);
-                            if (fallbackTimer) { clearTimeout(fallbackTimer); }
-                            resolve(selectedVoice);
-                        }
-                    };
-                    window.speechSynthesis.addEventListener('voiceschanged', onChange);
-                    // Резерв: спробувати ще раз через мікрозатримку
-                    setTimeout(() => {
-                        if (pickVoice()) {
-                            window.speechSynthesis.removeEventListener('voiceschanged', onChange);
-                            if (fallbackTimer) { clearTimeout(fallbackTimer); }
-                            resolve(selectedVoice);
-                        }
-                    }, 250);
-                    // Остаточний таймаут: говоримо без явного голосу
-                    fallbackTimer = setTimeout(() => {
-                        try { window.speechSynthesis.removeEventListener('voiceschanged', onChange); } catch {}
-                        voicesLoaded = true;
-                        // залишаємо selectedVoice як null — браузер підбере дефолт
-                        logInfo('tts.voices', 'Fallback timeout reached, using default voice');
-                        resolve(null);
-                    }, 900);
-                    return;
-                }
-                resolve(selectedVoice);
-            });
-        }
-        return voicesLoadPromise;
+        return audio;
     }
 
     async function speakWord(text) {
         try {
-            if (!text || !('speechSynthesis' in window)) {
-                if (!('speechSynthesis' in window)) {
-                    logInfo('tts.speak', 'speechSynthesis not supported');
-                }
+            const now = Date.now();
+            // Дебаунс, щоб не дублювати під час утримання або дуже швидких клацань
+            if (now - lastPlayTs < 120) {
                 return;
             }
-            const voice = await ensureVoices();
-            const utter = new SpeechSynthesisUtterance(String(text));
-            // Визначаємо цільову мову: намагаємось uk-UA, якщо її нема — беремо ru-RU як ближчу;
-            // якщо вибраний голос англійський — встановлюємо en-US; інакше лишаємо uk-UA (браузер підбере дефолт)
-            const voiceLang = (selectedVoice && selectedVoice.lang ? selectedVoice.lang.toLowerCase() : '');
-            let targetLang = 'uk-UA';
-            if (voiceLang.startsWith('uk')) targetLang = 'uk-UA';
-            else if (voiceLang.startsWith('ru')) targetLang = 'ru-RU';
-            else if (voiceLang.startsWith('en')) targetLang = 'en-US';
-            utter.lang = targetLang;
-            // Використовуємо voice тільки якщо його lang узгоджений з targetLang, щоб не примушувати невідповідність
-            if (selectedVoice && voiceLang.startsWith(targetLang.slice(0,2).toLowerCase())) {
-                utter.voice = selectedVoice;
-            } else if (voiceLang && !voiceLang.startsWith('uk')) {
-                // Якщо вибраний голос не український, але має свою валідну мову (наприклад, ru/en),
-                // краще довіритися добору за lang, тому явно не прив'язуємо голос
-                utter.voice = null;
+            lastPlayTs = now;
+
+            const key = getWordKey(text);
+            if (!key) {
+                return;
             }
-            utter.rate = 1.0;
-            utter.pitch = 1.0;
-            utter.volume = 1.0;
-            logInfo('tts.speak', 'Attempt speak', { text, lang: utter.lang, selectedVoice: selectedVoice ? { name: selectedVoice.name, lang: selectedVoice.lang } : null });
-            utter.onend = () => logInfo('tts.onend', 'Utterance finished', { text });
-            utter.onerror = (e) => logError('tts.onerror', e.error || e);
-            // Скасовуємо попереднє, щоб уникати накладань
-            try { window.speechSynthesis.cancel(); } catch {}
-            // Невелика затримка після cancel() у Chrome, щоб уникнути "проковтування" першого utterance
-            setTimeout(() => {
-                try {
-                    window.speechSynthesis.speak(utter);
-                    logInfo('tts.speak', 'Speak invoked');
-                } catch (e) {
-                    logError('tts.speak invoke', e);
+
+            // Зупиняємо попередній звук без помилок
+            try {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
                 }
-            }, 30);
+            } catch {}
+
+            const audio = getAudioForWord(key);
+            currentAudio = audio;
+
+            // Перезапуск з початку і відтворення
+            try { audio.currentTime = 0; } catch {}
+            audio.onended = () => logInfo('audio.onend', 'Playback finished', { word: key });
+            audio.onerror = () => logInfo('audio.onerror', 'Playback error (file missing or blocked)', { word: key, src: audio.src });
+            logInfo('audio.play', 'Attempt play', { word: key, src: audio.src });
+            const p = audio.play();
+            if (p && typeof p.catch === 'function') {
+                p.catch(err => {
+                    // Ігноруємо переривання/gesture помилки, просто логуємо для діагностики
+                    logError('audio.play', err?.name || err?.message || err);
+                });
+            }
         } catch (error) {
-            logError('tts.speakWord', error);
+            logError('audio.speakWord', error);
         }
     }
 
@@ -213,3 +152,4 @@ export function createSoundManager() {
         dispose,
     };
 }
+// (TTS debug helpers removed as we now use pre-recorded audio files)
