@@ -377,7 +377,7 @@ button:active:not(:disabled) {
 
     .game-card {
         padding: 0.85rem;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        /* Keep column logic controlled by width, not height, to avoid image stretching on wide screens */
     }
 
     .selector-grid button {
@@ -397,7 +397,7 @@ button:active:not(:disabled) {
     }
 
     .game-card {
-        grid-template-columns: 1fr;
+        /* Do not force a single column by height; let width decide. Only tighten gaps. */
         gap: 0.8rem;
     }
 
