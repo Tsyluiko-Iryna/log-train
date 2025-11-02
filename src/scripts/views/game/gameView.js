@@ -79,7 +79,7 @@ export default async function renderGame(appRoot, context) {
             const id = `${letter}|${typeName}`;
             const meta = catalog.types[id];
             if (!meta) {
-                // Fallback if meta missing: use global correct-only excluding current corrects
+                // Якщо немає метаданих для типу: використовуємо глобальний пул лише правильних слів, виключивши поточні
                 let pool = allCorrectWordsGlobal().filter(item => !correctWords.some(w => w.text === item.text));
                 return shuffle(pool).slice(0, needed);
             }
@@ -88,7 +88,7 @@ export default async function renderGame(appRoot, context) {
                 const others = catalog.byLetter[letter]?.types?.lexical?.filter(tid => tid !== id) || [];
                 pool = wordsFromTypeIds(others);
                 if (pool.length < needed) {
-                    // Broaden to positions of same letter (still correct-only)
+                    // Розширюємо до позицій цієї ж літери (все ще тільки правильні слова)
                     const posIds = catalog.byLetter[letter]?.types?.positions || [];
                     const extra = wordsFromTypeIds(posIds);
                     const merged = [...pool, ...extra];
@@ -98,7 +98,7 @@ export default async function renderGame(appRoot, context) {
                 const others = catalog.byLetter[letter]?.types?.positions?.filter(tid => tid !== id) || [];
                 pool = wordsFromTypeIds(others);
                 if (pool.length < needed) {
-                    // Broaden to lexical of same letter (correct-only)
+                    // Розширюємо до лексичних тем цієї ж літери (тільки правильні слова)
                     const lexIds = catalog.byLetter[letter]?.types?.lexical || [];
                     const extra = wordsFromTypeIds(lexIds);
                     const merged = [...pool, ...extra];
@@ -112,24 +112,24 @@ export default async function renderGame(appRoot, context) {
                 const ids = container ? (container[bucket] || []) : [];
                 pool = wordsFromTypeIds(ids);
                 if (pool.length < needed) {
-                    // Broaden to other bucket of the second letter
+                    // Розширюємо до іншого кошика (тематики/позиції) для другої літери
                     const otherBucket = bucket === 'topics' ? 'positions' : 'topics';
                     const ids2 = container ? (container[otherBucket] || []) : [];
                     const extra = wordsFromTypeIds(ids2);
                     pool = uniqByText([...pool, ...extra]);
                 }
                 if (pool.length < needed) {
-                    // As a last resort, include correct words from the primary letter (both modes)
+                    // Останній крок: додати правильні слова з основної літери (лексика та позиції)
                     const lexIdsA = catalog.byLetter[a]?.types?.lexical || [];
                     const posIdsA = catalog.byLetter[a]?.types?.positions || [];
                     const extraA = wordsFromTypeIds([...lexIdsA, ...posIdsA]);
                     pool = uniqByText([...pool, ...extraA]);
                 }
             }
-            // exclude current correct words
+            // Виключаємо поточні правильні слова з пулу відволікачів
             pool = pool.filter(item => !correctWords.some(w => w.text === item.text));
             if (pool.length < needed) {
-                // Global correct-only fallback
+                // Глобальний запасний варіант: усі правильні слова (без поточних)
                 const global = allCorrectWordsGlobal().filter(item => !correctWords.some(w => w.text === item.text));
                 const extra = global.filter(x => !pool.some(p => p.text === x.text));
                 pool = [...pool, ...extra];
@@ -144,6 +144,7 @@ export default async function renderGame(appRoot, context) {
         memoryDistractors.forEach(word => assets.add(word.file));
 
         context.showLoader(texts.loader.fetchingAssets);
+        // Попереднє завантаження всіх потрібних зображень з оновленням індикатора прогресу
         await preloadImages(Array.from(assets), {
             onProgress: (current, total) => context.updateProgress(current, total),
         });
@@ -169,7 +170,11 @@ export default async function renderGame(appRoot, context) {
         });
         toolbar.append(backButton, info, checkButton);
 
-        const message = createElement('div', { classes: 'game-stage__message' });
+        // A11y: живий регіон для коротких статусних повідомлень (без зміни візуальної логіки)
+        const message = createElement('div', {
+            classes: 'game-stage__message',
+            attrs: { role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' },
+        });
         const footer = createElement('div', { classes: 'game-footer' });
         const authorTag = createElement('div', {
             classes: 'game-author-tag',
@@ -184,10 +189,14 @@ export default async function renderGame(appRoot, context) {
         stage.append(toolbar, message, footer);
         appRoot.append(stage);
 
+    // Ініціалізуємо менеджер звуку: короткі сигнали успіху/помилки та зчеплення
+    // Примітка: ресурс Web Audio буде звільнено у cleanup() через soundManager.dispose()
     const soundManager = createSoundManager();
     trainManager = createTrainManager({ stageEl: stage, letter, typeData, soundManager });
         await trainManager.init();
 
+    // Коротке повідомлення про результат перевірки (успіх/помилка)
+    let statusHideTimer = null; // запобігає накладанню таймерів приховування під час швидких повторів
     const showStatus = status => {
             message.classList.remove('is-success', 'is-error', 'is-visible');
             if (status === 'success') {
@@ -198,8 +207,13 @@ export default async function renderGame(appRoot, context) {
                 message.classList.add('is-error');
             }
             message.classList.add('is-visible');
-            setTimeout(() => {
+            if (statusHideTimer) {
+                clearTimeout(statusHideTimer);
+                statusHideTimer = null;
+            }
+            statusHideTimer = setTimeout(() => {
                 message.classList.remove('is-success', 'is-error', 'is-visible');
+                statusHideTimer = null;
             }, 1000);
         };
 
@@ -243,6 +257,7 @@ export default async function renderGame(appRoot, context) {
                     type: node.type,
                     isCorrect: node.isCorrect,
                 }));
+                // Перед переходом до опитувань: прибираємо замки та розбираємо перетягуваний поїзд
                 trainManager.detachAllLocks();
                 trainManager.destroy();
                 trainManager = null;
@@ -321,6 +336,7 @@ export default async function renderGame(appRoot, context) {
         }
 
         function setupQuestions(locked, wagons) {
+            // Слухачі кліків по вагончиках у зафіксованому потязі
             wagonListenersCleanup = () => locked.removeListeners();
             questionManager = createQuestionManager({
                 stageEl: stage,
@@ -396,11 +412,19 @@ export default async function renderGame(appRoot, context) {
                         logError('game.dispose', error);
                     }
                 });
+                // Погашаємо можливий активний таймер статусу, щоб уникнути гонок при переходах
+                if (statusHideTimer) {
+                    clearTimeout(statusHideTimer);
+                    statusHideTimer = null;
+                }
                 wagonListenersCleanup();
                 questionManager?.destroy?.();
                 memoryTest?.destroy?.();
                 trainManager?.destroy?.();
                 lockedTrain?.destroy?.();
+                // Акуратно звільняємо Web Audio ресурси (не змінює поведінку, лише прибирання)
+                soundManager?.dispose?.();
+                // Звільняємо посилання та ресурси після завершення етапів
                 questionManager = null;
                 memoryTest = null;
                 trainManager = null;

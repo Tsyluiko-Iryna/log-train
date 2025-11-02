@@ -1,6 +1,6 @@
-// Pair-based word data (Differentiation):
-// Keys are pairs like 'С-Ш', values have an items array of { label, correct, incorrect }.
-// Labels can be general topics (e.g., 'Фрукти') or positions ('Звук на початку' / 'Звук в середині' / 'Звук у кінці').
+// Дані слів для пар (Диференціація):
+// Ключі — пари на кшталт 'С-Ш', значення містять масив items із об'єктами { label, correct, incorrect }.
+// label може позначати лексичну тему (наприклад, 'Фрукти') або позицію звука ('Звук на початку' / 'Звук в середині' / 'Звук у кінці').
 export const pairWordData = {
   'С-Ш': {
     items: [

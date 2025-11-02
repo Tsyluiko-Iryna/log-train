@@ -16,8 +16,17 @@ export function nextFrame() {
 }
 
 export function randomPosition(width, height, stageRect) {
-    const maxX = Math.max(stageRect.width - width - 16, 0);
-    const maxY = Math.max(stageRect.height - height - 16, 0);
+    // Захисні перетворення: уникаємо NaN та відʼємних значень
+    const w = Math.max(Number(width) || 0, 0);
+    const h = Math.max(Number(height) || 0, 0);
+    const rectW = Math.max(Number(stageRect?.width) || 0, 0);
+    const rectH = Math.max(Number(stageRect?.height) || 0, 0);
+    if (rectW <= 0 || rectH <= 0) {
+        // Якщо розмір сцени невідомий — повертаємо нульову позицію в межах безпечного відступу
+        return { x: 0, y: 0 };
+    }
+    const maxX = Math.max(rectW - w - 16, 0);
+    const maxY = Math.max(rectH - h - 16, 0);
     return {
         x: Math.random() * maxX + 8,
         y: Math.random() * maxY + 8,

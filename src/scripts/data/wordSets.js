@@ -1,9 +1,10 @@
 import { resolveImage } from './imageMap.js';
-import { logError } from '../utils/logger.js';
+import { logError, logInfo } from '../utils/logger.js';
 import { singleLetterWordData } from './words/singleLetter.js';
 import { pairWordData } from './words/pairs.js';
 
 function buildWordEntry(word, isCorrect) {
+    // Уніфікований запис слова: текст, шлях до файлу зображення та ознака правильності
     return {
         text: word,
         file: resolveImage(word),
@@ -14,12 +15,15 @@ function buildWordEntry(word, isCorrect) {
 function transformData() {
     const result = {};
     try {
-        // Build base single-letter datasets (lexical + positions)
+        // Побудова базових наборів для окремих літер (лексичні теми + позиції звука)
         Object.entries(singleLetterWordData).forEach(([letter, groups]) => {
             const types = {};
             Object.entries(groups).forEach(([typeName, payload]) => {
-                const correct = payload.correct.map(word => buildWordEntry(word, true));
-                const incorrect = payload.incorrect.map(word => buildWordEntry(word, false));
+                // Страхуємося від некоректних структур даних
+                const rawCorrect = Array.isArray(payload?.correct) ? payload.correct : [];
+                const rawIncorrect = Array.isArray(payload?.incorrect) ? payload.incorrect : [];
+                const correct = rawCorrect.map(word => buildWordEntry(word, true));
+                const incorrect = rawIncorrect.map(word => buildWordEntry(word, false));
                 types[typeName] = {
                     type: typeName,
                     correct,
@@ -33,8 +37,8 @@ function transformData() {
             };
         });
 
-        // Inject Differentiation (pairs) datasets from external module
-        // Expect keys like 'С-Ш' and items: [{ label, correct, incorrect }]
+        // Додавання наборів "Диференціація" (пари) з зовнішнього модуля
+        // Очікуються ключі виду 'С-Ш' та items: [{ label, correct, incorrect }]
         Object.entries(pairWordData).forEach(([pairKey, payload]) => {
             const m = pairKey.match(/^\s*([А-ЯІЇЄҐA-Z])\s*-\s*([А-ЯІЇЄҐA-Z])\s*$/u);
             if (!m) return;
@@ -47,8 +51,10 @@ function transformData() {
             }
             items.forEach(({ label, correct = [], incorrect = [] }) => {
                 const typeNameA = `Диференціація: ${a}-${b} — ${label}`;
-                const c = correct.map(w => buildWordEntry(w, true));
-                const i = incorrect.map(w => buildWordEntry(w, false));
+                const srcCorrect = Array.isArray(correct) ? correct : [];
+                const srcIncorrect = Array.isArray(incorrect) ? incorrect : [];
+                const c = srcCorrect.map(w => buildWordEntry(w, true));
+                const i = srcIncorrect.map(w => buildWordEntry(w, false));
                 result[a].types[typeNameA] = { type: typeNameA, correct: c, incorrect: i, all: [...c, ...i] };
             });
         });
@@ -61,11 +67,13 @@ function transformData() {
 export const wordSets = transformData();
 
 export function listLetters() {
+    // Повертає список усіх літер, для яких зібрані набори слів
     return Object.keys(wordSets);
 }
 
 export function listTypes(letter) {
     try {
+        // Повертає всі типи (лексичні/позиційні/диференціація) для заданої літери
         const entry = wordSets[letter];
         return entry ? Object.keys(entry.types) : [];
     } catch (error) {
@@ -76,6 +84,7 @@ export function listTypes(letter) {
 
 export function getTypeData(letter, typeName) {
     try {
+        // Повертає структуру даних за назвою типу для конкретної літери або null
         const entry = wordSets[letter];
         if (!entry) {
             return null;
@@ -89,6 +98,7 @@ export function getTypeData(letter, typeName) {
 
 export function getAllWordsForLetter(letter) {
     try {
+        // Агрегує всі слова для літери без дублікатів (за текстом слова)
         const entry = wordSets[letter];
         if (!entry) {
             return [];
@@ -112,7 +122,7 @@ export function getAllWordsForLetter(letter) {
     }
 }
 
-// --- Differentiation loader from text file ---
+// --- Завантаження "Диференціації" з текстового файлу ---
 
 function normalizeWordToken(token) {
     return token
@@ -123,7 +133,7 @@ function normalizeWordToken(token) {
 }
 
 function parseWordList(segment) {
-    // segment is the part after "Правильні:" або "Неправильні:"
+    // segment — частина після "Правильні:" або "Неправильні:"
     const primary = segment.split(',');
     const tokens = primary.length > 1 ? primary : segment.split(/\s+/);
     return tokens.map(normalizeWordToken).filter(Boolean);
@@ -159,7 +169,7 @@ function parseDifferentiationText(text) {
             continue;
         }
         if (!current) continue;
-        // Expect pattern: "Label(.|:) Правильні: ... Неправильні: ..."
+        // Очікується формат: "Label(.|:) Правильні: ... Неправильні: ..."
         const labelMatch = line.match(/^([^\.:]+)\s*[\.:]\s*(.*)$/);
         if (!labelMatch) continue;
         const label = labelMatch[1].trim();
@@ -170,7 +180,7 @@ function parseDifferentiationText(text) {
         let incorrect = [];
         if (correctIdx !== -1) {
             const after = rest.slice(correctIdx + 'Правильні:'.length);
-            // If there's also "Неправильні:" after, limit to that
+            // Якщо далі є "Неправильні:", обмежуємо сегмент до цієї позиції
             const upto = incorrectIdx !== -1 ? rest.slice(correctIdx + 'Правильні:'.length, incorrectIdx) : after;
             correct = parseWordList(upto);
         }
@@ -192,19 +202,29 @@ export async function loadDifferentiationFromFile(path = 'words/Диференц
         if (!res.ok) return false;
         const text = await res.text();
         const blocks = parseDifferentiationText(text);
+        let upserted = 0;
+        let blockCount = 0;
+        let itemCount = 0;
         blocks.forEach(({ a, b, items }) => {
+            blockCount += 1;
             items.forEach(({ label, correct, incorrect }) => {
+                itemCount += 1;
                 const nameA = `Диференціація: ${a}-${b} — ${label}`;
                 const nameB = `Диференціація: ${b}-${a} — ${label}`;
+                const hadA = !!(wordSets[a]?.types?.[nameA]);
                 upsertDiffType(a, nameA, correct, incorrect);
-                // якщо для B ще немає цього типу — створимо дзеркально
-                if (!(wordSets[b]?.types?.[nameB])) {
+                if (!hadA) upserted += 1;
+                // Якщо для B ще немає цього типу — створимо дзеркально
+                const hadB = !!(wordSets[b]?.types?.[nameB]);
+                if (!hadB) {
                     upsertDiffType(b, nameB, incorrect, correct);
+                    upserted += 1;
                 }
             });
         });
-        // Invalidate catalog cache after mutation
+        // Після модифікації даних — інвалідовуємо кеш каталогу
         invalidateCatalog();
+        logInfo('wordSets.loadDifferentiationFromFile', `Завантажено з ${path}: блоків=${blockCount}, елементів=${itemCount}, upsert типів=${upserted}`);
         return true;
     } catch (error) {
         logError('wordSets.loadDifferentiationFromFile', error);
@@ -212,18 +232,19 @@ export async function loadDifferentiationFromFile(path = 'words/Диференц
     }
 }
 
-// ---------------- Normalized Catalog (read-only) ----------------
-// Provide a single, well-structured view over all game data: lexical, positions, differentiation.
-// Backward-compat API (listLetters/listTypes/getTypeData) stays intact.
+// ---------------- Нормалізований каталог (read-only) ----------------
+// Надає єдиний, структурований вигляд усіх ігрових даних: лексика, позиції, диференціація.
+// API для зворотної сумісності (listLetters/listTypes/getTypeData) лишається без змін.
 
 let catalogCache = null;
 
 function makeWord(entry) {
+    // Створює копію об'єкта слова з уніфікованими полями
     return { text: entry.text, file: entry.file, isCorrect: !!entry.isCorrect };
 }
 
 function detectModeAndMeta(letter, typeName) {
-    // Returns { mode: 'lexical'|'position'|'diff', label, pair: 'A-B'|null, primaryLetter: string }
+    // Повертає { mode: 'lexical'|'position'|'diff', label, pair: 'A-B'|null, primaryLetter: string }
     const posRe = /^Звук\s/i;
     if (posRe.test(typeName)) {
         return { mode: 'position', label: typeName, pair: null, primaryLetter: letter };
@@ -282,12 +303,12 @@ function buildCatalog() {
                 if (!byLetter[letter].pairs[pairKey]) {
                     byLetter[letter].pairs[pairKey] = { topics: [], positions: [] };
                 }
-                const bucket = /^Звук/i.test(meta.label) ? 'positions' : 'topics';
+                const bucket = /^Звук/i.test(meta.label) ? 'positions' : 'topics'; // класифікація у межах пари
                 byLetter[letter].pairs[pairKey][bucket].push(id);
             }
         });
     });
-    // Sort deterministically
+    // Детерміноване сортування для стабільного порядку відображення
     const sortByLabel = (a, b) => {
         const A = types[a].label.toLocaleLowerCase();
         const B = types[b].label.toLocaleLowerCase();

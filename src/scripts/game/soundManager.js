@@ -4,13 +4,18 @@ export function createSoundManager() {
     let audioContext = null;
 
     function ensureContext() {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        try {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext?.state === 'suspended') {
+                audioContext.resume().catch(error => logError('sound.resume', error));
+            }
+            return audioContext;
+        } catch (error) {
+            logError('sound.ensureContext', error);
+            return null;
         }
-        if (audioContext?.state === 'suspended') {
-            audioContext.resume().catch(error => logError('sound.resume', error));
-        }
-        return audioContext;
     }
 
     function playTone({ frequency, duration, type = 'sine', volume = 0.3, fade = true }) {
@@ -33,11 +38,25 @@ export function createSoundManager() {
             oscillator.start(startTime);
             oscillator.stop(startTime + duration);
             oscillator.addEventListener('ended', () => {
-                oscillator.disconnect();
-                gain.disconnect();
+                try { oscillator.disconnect(); } catch {}
+                try { gain.disconnect(); } catch {}
             });
         } catch (error) {
             logError('sound.playTone', error);
+        }
+    }
+
+    async function dispose() {
+        // Додатковий метод для звільнення ресурсів на мобільних/слабких пристроях
+        try {
+            const ctx = audioContext;
+            if (ctx && typeof ctx.close === 'function' && ctx.state !== 'closed') {
+                await ctx.close();
+            }
+        } catch (error) {
+            logError('sound.dispose', error);
+        } finally {
+            audioContext = null;
         }
     }
 
@@ -51,9 +70,11 @@ export function createSoundManager() {
             setTimeout(() => playTone({ frequency: 196, duration: 0.36, type: 'sine', volume: 0.16 }), 120);
         },
         playAttach() {
-            // Short mechanical "click" + light confirmation overtone
+            // Короткий «клік» з підтверджувальним обертоном
             playTone({ frequency: 520, duration: 0.07, type: 'square', volume: 0.18, fade: true });
             setTimeout(() => playTone({ frequency: 780, duration: 0.08, type: 'triangle', volume: 0.16, fade: true }), 40);
         },
+        // Нова можливість: вручну відпустити аудіо-ресурси після завершення гри
+        dispose,
     };
 }

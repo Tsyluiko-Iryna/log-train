@@ -1,5 +1,5 @@
-// Single-letter word data: lexical themes and sound positions per letter
-// Each group has arrays of correct and incorrect words.
+// Дані для однієї літери: лексичні теми та позиції звука для кожної літери
+// Кожна група містить масиви правильних і неправильних слів.
 export const singleLetterWordData = {
     'С': {
         'Овочі': {

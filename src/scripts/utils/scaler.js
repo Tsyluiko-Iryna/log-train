@@ -1,6 +1,24 @@
 import { logError } from './logger.js';
 
-export function attachHeightScaler(element, { margin = 32, minScale = 0.6, widthOffset = 0, animate = true, duration = 220, adjustWidth = true } = {}) {
+/**
+ * Підключає ресайзер/скейлер висоти до елемента.
+ * Задача: підлаштовувати масштаб (scale) елемента, щоб він вміщувався у видиму висоту вікна.
+ * Параметри налаштовують відступи, мінімальний масштаб, анімацію та корекцію ширини.
+ * preserveLayout=true залишає ширину/макс. ширину недоторканими; onScaleChange викликається при зміні масштабу.
+ */
+export function attachHeightScaler(
+    element,
+    {
+        margin = 32,
+        minScale = 0.6,
+        widthOffset = 0,
+        animate = true,
+        duration = 220,
+        adjustWidth = true,
+        preserveLayout = false,
+        onScaleChange = null,
+    } = {},
+) {
     if (!element) {
         return { dispose() {} };
     }
@@ -11,19 +29,21 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
     let baseMaxWidth = null;
     let didFirstApply = false;
 
-    // Animation state
+    // Стан анімації (для плавного переходу масштабу)
     let animRaf = null;
     let animFrom = 1;
     let animTo = 1;
     let animStart = 0;
     let animDuration = duration;
 
+    // Використовуємо ResizeObserver за наявності для швидкого реагування на зміну розміру елемента
     let resizeObserver = null;
     if (typeof ResizeObserver === 'function') {
         resizeObserver = new ResizeObserver(() => schedule());
         resizeObserver.observe(element);
     }
 
+    // Слідкуємо також за зміню розміру вікна
     window.addEventListener('resize', schedule);
 
     function schedule() {
@@ -56,35 +76,40 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
             if (!fullHeight) {
                 currentScale = 1;
                 element.style.transform = 'scale(1)';
-                element.style.width = '';
-                element.style.maxWidth = '';
+                if (adjustWidth && !preserveLayout) {
+                    element.style.width = '';
+                    element.style.maxWidth = '';
+                }
                 return;
             }
 
             const available = Math.max(window.innerHeight - margin, 0);
             const nextScale = Math.min(1, Math.max(minScale, available / fullHeight));
+            // Встановлюємо точку трансформації у верхній центр для коректного масштабування
             element.style.transformOrigin = 'top center';
 
-            // Cancel any running animation if target changes significantly
+            // Скасовуємо поточну анімацію, якщо ціль змінилась
             if (animRaf) {
                 cancelAnimationFrame(animRaf);
                 animRaf = null;
             }
 
+            // Функція застосування масштабу до елемента (без анімації)
             const applyAt = (scale) => {
+                const previousScale = currentScale;
                 if (scale < 0.999) {
                     element.style.transform = `scale(${scale})`;
-                    if (adjustWidth && baseWidth) {
+                    if (adjustWidth && !preserveLayout && baseWidth) {
                         const targetWidth = (baseWidth + widthOffset) / scale;
                         element.style.width = `${targetWidth}px`;
                     }
-                    if (adjustWidth && baseMaxWidth) {
+                    if (adjustWidth && !preserveLayout && baseMaxWidth) {
                         const targetMaxWidth = (baseMaxWidth + widthOffset) / scale;
                         element.style.maxWidth = `${targetMaxWidth}px`;
                     }
                 } else {
                     element.style.transform = 'scale(1)';
-                    if (adjustWidth) {
+                    if (adjustWidth && !preserveLayout) {
                         element.style.width = '';
                         element.style.maxWidth = '';
                     }
@@ -92,9 +117,16 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
                 }
                 currentScale = scale;
                 element.dataset.scale = String(currentScale);
+                if (typeof onScaleChange === 'function' && previousScale !== currentScale) {
+                    try {
+                        onScaleChange(currentScale);
+                    } catch (callbackError) {
+                        logError('attachHeightScaler.onScaleChange', callbackError);
+                    }
+                }
             };
 
-            // First paint: render at final scale, then reveal to avoid visible jump
+            // Перший рендер: одразу застосовуємо остаточний масштаб і відкриваємо елемент, щоб уникнути візуального стрибка
             if (!didFirstApply) {
                 applyAt(nextScale);
                 if (element.style.opacity === '') {
@@ -105,6 +137,7 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
                 return;
             }
 
+            // Якщо анімація вимкнена, відразу застосовуємо масштаб
             if (!animate) {
                 applyAt(nextScale);
                 return;
@@ -112,7 +145,7 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
 
             const delta = Math.abs(nextScale - currentScale);
             if (delta < 0.01) {
-                // Tiny change – apply directly to avoid micro-jitters
+                // Дуже мала різниця — застосовуємо одразу, щоб уникнути мікро-коливань
                 applyAt(nextScale);
                 return;
             }
@@ -123,6 +156,7 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
             animStart = performance.now();
             animDuration = duration;
 
+            // Функція згладжування анімації
             const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
             const step = (now) => {
                 const t = Math.min(1, (now - animStart) / animDuration);
@@ -141,7 +175,8 @@ export function attachHeightScaler(element, { margin = 32, minScale = 0.6, width
         }
     }
 
-    // Hide initially to prevent first-frame size pop, then reveal on first apply
+    // Приховуємо елемент на початку, щоб уникнути різкого стрибка розміру в першому кадрі,
+    // потім плавно показуємо при першому застосуванні масштабу
     try {
         if (!element.style.opacity) {
             element.style.opacity = '0';

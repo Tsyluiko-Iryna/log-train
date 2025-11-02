@@ -105,10 +105,17 @@ export function createQuestionManager({ stageEl, wagons, soundManager, onComplet
             return;
         }
         clearFeedbackTimer();
+        // Defensive: ensure questionIndex is in bounds. If not, treat as complete.
+        if (questionIndex < 0 || questionIndex >= preparedQuestions.length) {
+            handleComplete();
+            return;
+        }
         const item = preparedQuestions[questionIndex];
         setTextContent(questionText, item.text);
         setTextContent(progress, texts.questions.progress(questionIndex + 1, preparedQuestions.length));
         updatePanelState(null);
+        // Mark manager active — a question is visible and can be answered
+        active = true;
     }
 
     function handleComplete() {
@@ -124,17 +131,31 @@ export function createQuestionManager({ stageEl, wagons, soundManager, onComplet
             return { correct: false, finished: false };
         }
         const item = preparedQuestions[questionIndex];
+        // Defensive guard: if index is out of range (possible race during
+        // end-of-questions transition), return a safe finished state.
+        if (!item) {
+            return { correct: false, finished: questionIndex >= preparedQuestions.length };
+        }
         if (word === item.answer) {
             updatePanelState('is-success');
             setTextContent(questionText, texts.questions.correct);
             soundManager.playSuccess?.();
             questionIndex += 1;
+            // If we've reached the end, mark inactive and finalize after delay
             if (questionIndex >= preparedQuestions.length) {
+                active = false;
                 setTimeout(handleComplete, 600);
                 return { correct: true, finished: true };
             }
+            // Block further evaluations during transition animation; will be
+            // re-enabled when showCurrentQuestion sets active = true.
+            active = false;
             setTimeout(() => {
-                showCurrentQuestion();
+                try {
+                    showCurrentQuestion();
+                } catch (err) {
+                    logError('questions.show', err);
+                }
             }, 700);
             return { correct: true, finished: false };
         }

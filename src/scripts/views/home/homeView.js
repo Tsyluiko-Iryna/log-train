@@ -37,7 +37,7 @@ export default function renderHome(appRoot, context) {
     cardBody.append(cardTitle, cardTagline, cardDescription);
         gameCard.append(visual, cardBody);
 
-    // LEXICAL SECTION (title label only)
+    // Розділ лексики (заголовок)
         const selectorsWrapper = createElement('section', { classes: 'selector-section' });
         const letterLabel = createElement('div', { classes: 'selector-section__label', text: texts.selectors.lexicalLetterLabel || texts.selectors.letterLabel });
         const letterGrid = createElement('div', { classes: 'selector-grid' });
@@ -48,13 +48,13 @@ export default function renderHome(appRoot, context) {
         const typeGrid = createElement('div', { classes: 'selector-grid' });
         typeWrapper.append(typeLabel, typeGrid);
 
-        // POSITIONS (phonemic) under the same letter selection
+    // Розділ позицій звука (фонеміка) під тією ж літерою
         const typeWrapperPos = createElement('section', { classes: 'selector-section' });
         const typeLabelPos = createElement('div', { classes: 'selector-section__label', text: texts.selectors.phonemicTypeLabel || texts.selectors.typeLabel });
         const typeGridPos = createElement('div', { classes: 'selector-grid' });
         typeWrapperPos.append(typeLabelPos, typeGridPos);
 
-        // DIFFERENTIATION SECTION (title label only)
+    // Розділ диференціації (лише заголовок секції)
     const selectorsWrapperDiff = createElement('section', { classes: 'selector-section' });
     const pairLabelDiff = createElement('div', { classes: 'selector-section__label', text: texts.selectors.differentiationLetterLabel || texts.selectors.letterLabel });
     const pairGridDiff = createElement('div', { classes: 'selector-grid' });
@@ -77,9 +77,9 @@ export default function renderHome(appRoot, context) {
         });
         actionsUnified.append(startButton);
 
-        // Removed the optional summary text under the Start button for a cleaner layout
+    // Видалено необов'язковий опис під кнопкою запуску для чистішого макета
 
-        // Footer tags like on game screen: author + legal in bottom-right
+    // Нижні позначки як на ігровому екрані: автор і правовий текст у правому нижньому куті
         const gameStyleFooter = createElement('div', { classes: 'game-footer' });
         const authorTag = createElement('div', {
             classes: 'game-author-tag',
@@ -106,17 +106,18 @@ export default function renderHome(appRoot, context) {
         wrapper.append(container);
         appRoot.append(wrapper);
 
-    // Disable animation to avoid layout thrashing when content height changes (e.g., long type names)
+    // Вимикаємо анімацію, щоб уникнути смикання висоти під час змін контенту (наприклад, довгі назви типів)
     const scaler = attachHeightScaler(container, { margin: 12, minScale: 0.45, widthOffset: 0, animate: false, adjustWidth: false });
         disposables.push(() => scaler.dispose());
 
-    let selectedLetter = null; // common for lexical and positions
-    let selectedType = null;   // lexical
-    let selectedTypePos = null;   // positions
-    let selectedPairDiff = null; // e.g., 'Р-Л'
-    let selectedLetterDiff = null; // first letter of pair
-    let selectedTypeDiff = null;   // differentiation
-    let activeSection = null; // 'lex' | 'pos' | 'diff'
+    // Локальні стани контролюють вибір у трьох секціях, аби кнопка старту ставала активною лише за валідної комбінації
+    let selectedLetter = null; // для лексики та позицій
+    let selectedType = null;   // обраний лексичний тип
+    let selectedTypePos = null;   // обраний позиційний тип
+    let selectedPairDiff = null; // наприклад, «Р-Л»
+    let selectedLetterDiff = null; // перша літера обраної пари
+    let selectedTypeDiff = null;   // конкретний тип у блоці диференціації
+    let activeSection = null; // останній активний блок: 'lex' | 'pos' | 'diff'
 
         function refreshStartButton() {
             const readyLex = Boolean(selectedLetter && selectedType);
@@ -150,10 +151,10 @@ export default function renderHome(appRoot, context) {
                 selectedType = type;
                 Array.from(typeGrid.children).forEach(child => child.classList.remove('is-active'));
                 button.classList.add('is-active');
-                // Clear selection in the other section (positions) so only one theme is chosen overall
+                // Очищаємо вибір у блоці позицій, щоб залишити активною лише одну тему
                 selectedTypePos = null;
                 Array.from(typeGridPos.children).forEach(child => child.classList.remove('is-active'));
-                // Also clear differentiation section for exclusivity across three
+                // Також скидаємо вибір у секції диференціації для взаємної виключності
                 selectedTypeDiff = null;
                 Array.from(typeGridDiffTopics.children).forEach(child => child.classList.remove('is-active'));
                 Array.from(typeGridDiffPositions.children).forEach(child => child.classList.remove('is-active'));
@@ -170,10 +171,10 @@ export default function renderHome(appRoot, context) {
                 selectedTypePos = type;
                 Array.from(typeGridPos.children).forEach(child => child.classList.remove('is-active'));
                 button.classList.add('is-active');
-                // Clear selection in the other section (lexical)
+                // Очищаємо вибір у лексичному блоці
                 selectedType = null;
                 Array.from(typeGrid.children).forEach(child => child.classList.remove('is-active'));
-                // Also clear differentiation section
+                // Також скидаємо диференціацію, щоб уникнути паралельного вибору
                 selectedTypeDiff = null;
                 Array.from(typeGridDiffTopics.children).forEach(child => child.classList.remove('is-active'));
                 Array.from(typeGridDiffPositions.children).forEach(child => child.classList.remove('is-active'));
@@ -206,11 +207,11 @@ export default function renderHome(appRoot, context) {
                 const button = event.currentTarget;
                 const type = button.dataset.type;
                 selectedTypeDiff = type;
-                // Clear Diff grid highlights
+                // Прибираємо підсвітку в обох сітках диференціації
                 Array.from(typeGridDiffTopics.children).forEach(child => child.classList.remove('is-active'));
                 Array.from(typeGridDiffPositions.children).forEach(child => child.classList.remove('is-active'));
                 button.classList.add('is-active');
-                // Clear selection in the other two sections for exclusivity
+                // Очищаємо вибір у лексичній і позиційній секціях для взаємовиключності
                 selectedType = null;
                 Array.from(typeGrid.children).forEach(child => child.classList.remove('is-active'));
                 selectedTypePos = null;
@@ -250,7 +251,7 @@ export default function renderHome(appRoot, context) {
                     return;
                 }
                 setTextContent(typeLabel, texts.selectors.lexicalTypeLabel || texts.selectors.typeLabel);
-                // Exclude phonemic-position and differentiation types from lexical list
+                // Відфільтровуємо позиційні та диференціальні типи з лексичного списку
                 const filtered = types.filter(name => !/^Звук\s/.test(name) && !/^Диференціація/.test(name));
                 filtered.forEach(typeName => {
                     const button = createElement('button', {
@@ -299,6 +300,9 @@ export default function renderHome(appRoot, context) {
                 const [a] = pair.split('-');
                 const all = listTypes(a);
                 const pairRe = new RegExp(`^Диференціація:\\s*${a}[-]${pair.split('-')[1]}\\s*—\\s*`);
+                
+                    // Розділяємо знайдені типи на тематичні та позиційні, 
+                    // щоб показати їх у відповідних сітках кнопок
                 const matching = all.filter(t => pairRe.test(t));
                 const topics = matching.filter(t => !/^(Диференціація:\s*[^—]+—\s*)?Звук/i.test(t));
                 const positions = matching.filter(t => /Звук/i.test(t));
@@ -340,7 +344,7 @@ export default function renderHome(appRoot, context) {
 
                 let use = activeSection;
                 if (!use) {
-                    // Fallback priority if none explicitly set: lex > pos > diff
+                    // Якщо активний блок не визначено, застосовуємо пріоритет: лексика > позиції > диференціація
                     use = readyLex ? 'lex' : (readyPos ? 'pos' : 'diff');
                 }
                 const letter = use === 'diff' ? selectedLetterDiff : selectedLetter;
@@ -357,7 +361,7 @@ export default function renderHome(appRoot, context) {
         disposables.push(() => startButton.removeEventListener('click', handleStartClick));
 
     populateLetters();
-    // Differentiation uses PAIRS instead of letters, e.g., 'Р-Л', 'Л-Р'
+    // Для диференціації використовуються пари літер, наприклад «Р-Л» або «Л-Р»
     function populatePairsDiff() {
         try {
             clearElement(pairGridDiff);
@@ -384,7 +388,7 @@ export default function renderHome(appRoot, context) {
                 disposables.push(() => button.removeEventListener('click', handlePairClickDiff));
                 pairGridDiff.append(button);
             });
-            // Auto-select first pair to pre-populate diff types
+            // Автоматично обираємо першу пару, щоб одразу підготувати типи диференціації
             const firstBtn = pairGridDiff.querySelector('button');
             if (firstBtn) {
                 firstBtn.classList.add('is-active');
@@ -400,7 +404,7 @@ export default function renderHome(appRoot, context) {
     }
     populatePairsDiff();
 
-    // Auto-select first letter to pre-populate lexical/position grids
+    // Автоматично обираємо першу літеру, щоб заповнити лексичні та позиційні списки
     (function autoSelectDefaultLetter() {
         const firstBtn = letterGrid.querySelector('button');
         if (!firstBtn) return;

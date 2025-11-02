@@ -19,6 +19,7 @@ function normalizeHash(hash) {
 export function initRouter({ appRoot, showLoader, hideLoader, updateProgress }) {
     let currentCleanup = null;
     let isNavigating = false;
+    let nextRoute = null; // when a navigation arrives during an ongoing navigation, queue it
 
     // Fallback no-op handlers to improve robustness if not provided
     showLoader = typeof showLoader === 'function' ? showLoader : () => {};
@@ -53,6 +54,9 @@ export function initRouter({ appRoot, showLoader, hideLoader, updateProgress }) 
             const render = module?.default;
             if (typeof render === 'function') {
                 currentCleanup = await render(appRoot, context);
+            } else {
+                // Missing render function for route — log to aid debugging
+                logError('router.noRender', { routeName, module });
             }
         } catch (error) {
             logError('router.renderRoute', error);
@@ -60,6 +64,15 @@ export function initRouter({ appRoot, showLoader, hideLoader, updateProgress }) 
             hideLoader();
             updateProgress();
             isNavigating = false;
+            // If a new navigation request arrived while we were rendering,
+            // handle it now (FIFO single-slot queue). This avoids parallel
+            // renderRoute executions and redundant dynamic imports.
+            if (nextRoute) {
+                const pending = nextRoute;
+                nextRoute = null;
+                // fire-and-forget the pending route (it will set isNavigating)
+                renderRoute(pending).catch(err => logError('router.renderPending', err));
+            }
         }
     }
 
@@ -75,6 +88,11 @@ export function initRouter({ appRoot, showLoader, hideLoader, updateProgress }) 
 
     async function handleHashChange() {
         const routeName = normalizeHash(window.location.hash);
+        // If navigation already in progress, queue the latest requested route
+        if (isNavigating) {
+            nextRoute = routeName;
+            return;
+        }
         await renderRoute(routeName);
     }
 
@@ -82,11 +100,19 @@ export function initRouter({ appRoot, showLoader, hideLoader, updateProgress }) 
     handleHashChange().catch(error => logError('router.init', error));
 
     return {
-        destroy() {
+        // destroy may be async if the current cleanup returns a promise
+        async destroy() {
             window.removeEventListener('hashchange', handleHashChange);
+            // clear any queued navigation
+            nextRoute = null;
             if (currentCleanup) {
-                currentCleanup();
-                currentCleanup = null;
+                try {
+                    await Promise.resolve(currentCleanup());
+                } catch (err) {
+                    logError('router.destroy.cleanup', err);
+                } finally {
+                    currentCleanup = null;
+                }
             }
         },
     };

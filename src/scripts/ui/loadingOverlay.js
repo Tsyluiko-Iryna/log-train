@@ -7,20 +7,20 @@ export function createLoadingOverlay(parent = document.body) {
         const overlay = createElement('div', { classes: 'loader-overlay' });
         const box = createElement('div', { classes: 'loader-box' });
         const spinner = createElement('div', { classes: 'loader-spinner' });
-        // Default message is taken from texts; falls back to a plain string if unavailable
-        const defaultMessage = (texts && texts.loader && texts.loader.loading) ? texts.loader.loading : 'Loading…';
+    // Повідомлення за замовчуванням бере з texts; у разі відсутності — використовується простий рядок
+    const defaultMessage = (texts && texts.loader && texts.loader.loading) ? texts.loader.loading : 'Loading…';
         const text = createElement('div', { classes: 'loader-text', text: defaultMessage });
         const progress = createElement('div', { classes: 'loader-progress', text: '' });
 
-        // Minimal, non-breaking accessibility attributes
-        // Overlay visibility state is mirrored to aria-* attributes in show/hide
-        overlay.setAttribute('aria-hidden', 'true');
-        overlay.setAttribute('aria-busy', 'false');
-        // Spinner is purely decorative
-        spinner.setAttribute('aria-hidden', 'true');
-        // Announce loading messages politely to assistive tech
-        text.setAttribute('role', 'status');
-        text.setAttribute('aria-live', 'polite');
+    // Мінімальні атрибути доступності (не ламають існуючий API)
+    // Стан видимості оверлею відображається в aria-* при show/hide
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.setAttribute('aria-busy', 'false');
+    // Spinner є декоративним елементом — приховуємо його від AT
+    spinner.setAttribute('aria-hidden', 'true');
+    // Повідомлення про завантаження оголошуються коректно для допоміжних технологій
+    text.setAttribute('role', 'status');
+    text.setAttribute('aria-live', 'polite');
 
         box.append(spinner, text, progress);
         overlay.append(box);

@@ -1,16 +1,32 @@
 <!DOCTYPE html>
 <html lang="uk">
+<!-- Мовна локалізація сторінки: lang="uk" допомагає SEO та доступності (екранні зчитувачі, пошуковики). -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Логопедичні ігри</title>
+
+    <!-- Базові мета-дані / SEO -->
+    <meta name="description" content="Інтерактивні логопедичні ігри для тренування мовлення">
+    <meta name="theme-color" content="#ffffff">
+
+    <!-- Іконки -->
     <link rel="icon" type="image/png" href="src/images/logo.png">
-    <link rel="stylesheet" href="src/styles/main.css">
+    <link rel="apple-touch-icon" href="src/images/logo.png">
+
+    <!-- Стилі: використовуємо preload для раннього завантаження CSS і застосовуємо його після завершення завантаження. Фолбек у <noscript> підключить stylesheet, якщо JS вимкнено. -->
+    <!-- Зауваження: inline onload може блокуватися політикою CSP; у такому разі використайте простий <link rel="stylesheet"> або зовнішній скрипт для перемикання rel. -->
+    <link rel="preload" href="src/styles/main.css" as="style" onload="this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="src/styles/main.css">
+    </noscript>
 </head>
 <body>
-    <div id="app" class="app-root"></div>
+    <!-- Основний контейнер SPA: фокус встановлюється з JS; role="main" + tabindex="-1" покращують доступність навігації. -->
+    <main id="app" class="app-root" role="main" tabindex="-1"></main>
+    <!-- Повідомлення для користувачів із вимкненим JavaScript -->
     <noscript class="no-script">Для роботи застосунку потрібно увімкнути JavaScript.</noscript>
+    <!-- Точка входу додатку: ES module, що ініціалізує (bootstrap) SPA -->
     <script type="module" src="src/scripts/main.js"></script>
 </body>
 </html>

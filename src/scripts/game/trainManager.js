@@ -21,6 +21,35 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
         activeDragGroup: null,
     };
 
+    // rAF-пакетування після рухів: оновлення позицій замків та підсвітки кандидата зчеплення
+    let afterMoveRaf = null;
+    let pendingGroupForLocks = null;
+    function scheduleAfterMove(group) {
+        pendingGroupForLocks = group;
+        if (afterMoveRaf) {
+            return;
+        }
+        afterMoveRaf = requestAnimationFrame(() => {
+            afterMoveRaf = null;
+            if (pendingGroupForLocks) {
+                try {
+                    repositionLocksForGroup(pendingGroupForLocks);
+                } catch (e) {
+                    logError('train.repositionLocksRaf', e);
+                }
+                pendingGroupForLocks = null;
+            }
+            // Підсвітку рахуємо не частіше одного кадру, лише під час активного перетягування
+            try {
+                if (state.isDragging) {
+                    updateHighlight();
+                }
+            } catch (e) {
+                logError('train.updateHighlightRaf', e);
+            }
+        });
+    }
+
     const cabId = 'cab';
 
     function createCabNode() {
@@ -222,30 +251,76 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
                 const dx = moveEvent.clientX - start.x;
                 const dy = moveEvent.clientY - start.y;
                 moveGroup(group, initialPositions, dx, dy);
-                updateHighlight();
+                // Пакетуємо оновлення підсвітки/замків в rAF для стабільного FPS
+                scheduleAfterMove(group);
             } catch (error) {
                 logError('train.dragMove', error);
+            }
+        };
+
+        let cleaned = false;
+        let finished = false;
+        const cleanupDrag = () => {
+            if (cleaned) {
+                return;
+            }
+            cleaned = true;
+            window.removeEventListener('pointermove', handleMove);
+            window.removeEventListener('pointerup', handleUp);
+            window.removeEventListener('pointercancel', handleCancel);
+            group.forEach(member => member.element.classList.remove('is-dragging'));
+            state.isDragging = false;
+            clearHighlight();
+            state.activeDragGroup = null;
+            // Скасовуємо відкладені кадри оновлення після завершення перетягування
+            if (afterMoveRaf) {
+                cancelAnimationFrame(afterMoveRaf);
+                afterMoveRaf = null;
+                pendingGroupForLocks = null;
             }
         };
 
         const handleUp = upEvent => {
             try {
                 node.element.releasePointerCapture(upEvent.pointerId);
-                finishDrag();
+            } catch (error) {
+                logError('train.dragRelease', error);
+            }
+            try {
+                if (!finished) {
+                    finished = true;
+                    finishDrag();
+                }
             } catch (error) {
                 logError('train.dragUp', error);
             } finally {
-                window.removeEventListener('pointermove', handleMove);
-                window.removeEventListener('pointerup', handleUp);
-                group.forEach(member => member.element.classList.remove('is-dragging'));
-                state.isDragging = false;
-                clearHighlight();
-                state.activeDragGroup = null;
+                cleanupDrag();
+            }
+        };
+
+        const handleCancel = cancelEvent => {
+            try {
+                if (node.element.hasPointerCapture?.(cancelEvent.pointerId)) {
+                    node.element.releasePointerCapture(cancelEvent.pointerId);
+                }
+            } catch (error) {
+                logError('train.dragCancelRelease', error);
+            }
+            try {
+                if (!finished) {
+                    finished = true;
+                    finishDrag();
+                }
+            } catch (error) {
+                logError('train.dragCancel', error);
+            } finally {
+                cleanupDrag();
             }
         };
 
         window.addEventListener('pointermove', handleMove);
         window.addEventListener('pointerup', handleUp);
+        window.addEventListener('pointercancel', handleCancel);
     }
 
     function moveGroup(group, initialPositions, dx, dy) {
@@ -274,13 +349,20 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
             deltaY -= bbox.maxY - (state.bounds.height - padding);
         }
 
+        // Прискорюємо пошук початкових позицій за допомогою Map (O(1) замість O(n))
+        const initialMap = new Map(initialPositions.map(item => [item.id, item]));
         group.forEach(member => {
-            const initial = initialPositions.find(item => item.id === member.id);
+            const initial = initialMap.get(member.id);
             const nextX = clamp(initial.x + deltaX, 0, Math.max(state.bounds.width - member.size.width, 0));
             const nextY = clamp(initial.y + deltaY, 0, Math.max(state.bounds.height - member.size.height, 0));
             applyPosition(member, nextX, nextY);
         });
-        repositionLocksForGroup(group);
+        // Замки й підсвітку оновлюємо раз на кадр під час drag; поза drag — одразу
+        if (state.isDragging) {
+            scheduleAfterMove(group);
+        } else {
+            repositionLocksForGroup(group);
+        }
     }
 
     function computeGroupBounds(group, positions = null) {
@@ -716,7 +798,8 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
                 // Keep all existing wagons visible when window size changes
                 clampAllIntoBounds();
             };
-            window.addEventListener('resize', handleResize);
+            // Пасивний слухач resize не блокує основний потік
+            window.addEventListener('resize', handleResize, { passive: true });
             teardownCallbacks.push(() => window.removeEventListener('resize', handleResize));
         } catch (error) {
             logError('train.init', error);
