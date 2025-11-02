@@ -55,9 +55,9 @@
 
 :root {
   /* Palette (Pastel Meadow) */
-  --color-bg: #FAF7F2;            /* фон сторінки — змінити тут */
-  --color-surface: #FFFAF5;        /* фон карток/панелей — змінити тут */
-  --color-surface-muted: #FFF3EA;  /* фон менш важливих панелей — змінити тут */
+  --color-bg: #adc6a5;            /* фон сторінки — змінити тут */
+  --color-surface: #af591c;        /* фон карток/панелей — змінити тут */
+  --color-surface-muted: #26e633;  /* фон менш важливих панелей — змінити тут */
   --color-border: #8E8A82;         /* колір меж/бордерів — змінити тут */
 
   --color-text: #4B4A46;           /* основний текст (змінити щоб зробити весь текст чорним) */
@@ -102,7 +102,7 @@
   );
 
   /* Typography */
-  --font-family-base: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-family-base: 'Baloo 2', system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif; /* округлий дитячий шрифт (Baloo 2) */
   --font-weight-regular: 400;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
