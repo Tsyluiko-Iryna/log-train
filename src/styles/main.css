@@ -149,7 +149,7 @@ button:active:not(:disabled) {
     font-size: clamp(1.7rem, 3.8vw, 2.2rem);
     font-weight: 800;
     letter-spacing: 0.04em;
-    color: var(--heading-color); /* головний заголовок: синій #1976D2 (token --heading-color) */
+    color: var(--heading-color); /* головний заголовок: синій #1565C0 (token --heading-color) */
     /* Remove default h1 margins to avoid big gaps above/below */
     margin: 0;
 }
