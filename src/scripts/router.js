@@ -16,20 +16,17 @@ function normalizeHash(hash) {
     return 'home';
 }
 
-export function initRouter({ appRoot, showLoader, hideLoader, updateProgress }) {
+export function initRouter({ appRoot, showLoader, hideLoader }) {
     let currentCleanup = null;
     let isNavigating = false;
-    let nextRoute = null; // when a navigation arrives during an ongoing navigation, queue it
+    let nextRoute = null;
 
-    // Fallback no-op handlers to improve robustness if not provided
     showLoader = typeof showLoader === 'function' ? showLoader : () => {};
     hideLoader = typeof hideLoader === 'function' ? hideLoader : () => {};
-    updateProgress = typeof updateProgress === 'function' ? updateProgress : () => {};
 
     const context = {
         showLoader,
         hideLoader,
-        updateProgress,
         navigate: navigateTo,
         get isNavigating() {
             return isNavigating;
@@ -62,15 +59,10 @@ export function initRouter({ appRoot, showLoader, hideLoader, updateProgress }) 
             logError('router.renderRoute', error);
         } finally {
             hideLoader();
-            updateProgress();
             isNavigating = false;
-            // If a new navigation request arrived while we were rendering,
-            // handle it now (FIFO single-slot queue). This avoids parallel
-            // renderRoute executions and redundant dynamic imports.
             if (nextRoute) {
                 const pending = nextRoute;
                 nextRoute = null;
-                // fire-and-forget the pending route (it will set isNavigating)
                 renderRoute(pending).catch(err => logError('router.renderPending', err));
             }
         }

@@ -71,5 +71,7 @@ export const texts = {
     legal: '© 2025. Усі права захищено.',
     errors: {
         assetLoadFailed: fileName => `Не вдалося завантажити ${fileName}`,
+        globalError: 'Виникла технічна помилка. Спробуйте оновити сторінку.',
+        asyncError: 'Виникла помилка при обробці запиту. Спробуйте ще раз.',
     },
 };

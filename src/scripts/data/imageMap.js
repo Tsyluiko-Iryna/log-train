@@ -1,9 +1,3 @@
-const overrides = new Map([
-    ['жираф', 'жирафа.png'],
-    // Узгодження словоформи: використовуємо наявне ім'я салатниця.png для слова "салатник"
-    ['салатник', 'салатниця.png'],
-]);
-
 function normalize(word) {
     // Нормалізація слова для відображення у файловій назві:
     // - безпечне приведення до рядка (null/undefined -> '')
@@ -14,10 +8,7 @@ function normalize(word) {
 }
 
 export function resolveImage(word) {
-    // Повертає ім'я файлу зображення для заданого слова з урахуванням overrides
+    // Повертає ім'я файлу зображення для заданого слова
     const normalized = normalize(word);
-    if (overrides.has(normalized)) {
-        return overrides.get(normalized);
-    }
     return `${normalized}.png`;
 }

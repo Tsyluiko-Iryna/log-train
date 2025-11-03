@@ -20,13 +20,6 @@ const DEFAULT_OPTIONS = {
 
 let logOptions = { ...DEFAULT_OPTIONS };
 
-export function configureLogger(options = {}) {
-    logOptions = {
-        ...logOptions,
-        ...options,
-    };
-}
-
 export function logError(origin, error) {
     try {
         const details = error instanceof Error ? error : new Error(String(error));
@@ -50,6 +43,32 @@ export function logInfo(origin, message, payload) {
         } else {
             // eslint-disable-next-line no-console
             console.info(`[${timestamp}][${origin}] ${message}`);
+        }
+    } catch (consoleFailure) {
+        // eslint-disable-next-line no-console
+        console.error('LoggerFailure', consoleFailure);
+    }
+}
+
+/**
+ * Логування успішних операцій
+ * @param {string} origin - Модуль/контекст
+ * @param {string} action - Дія що виконана
+ * @param {*} [data] - Опціональні дані
+ */
+export function logOK(origin, action, data) {
+    if (!logOptions.info) {
+        return;
+    }
+    try {
+        const timestamp = createTimestamp();
+        const prefix = `✅ OK [${timestamp}][${origin}] ${action}`;
+        if (data !== undefined) {
+            // eslint-disable-next-line no-console
+            console.info(prefix, data);
+        } else {
+            // eslint-disable-next-line no-console
+            console.info(prefix);
         }
     } catch (consoleFailure) {
         // eslint-disable-next-line no-console

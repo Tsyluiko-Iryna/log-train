@@ -1,6 +1,6 @@
 import { createElement, setTextContent } from '../utils/dom.js';
 import { texts } from '../data/texts.js';
-import { logError } from '../utils/logger.js';
+import { logError, logOK } from '../utils/logger.js';
 import { getImageUrl } from '../utils/assets.js';
 
 function shuffle(array) {
@@ -103,6 +103,13 @@ export function createMemoryTest({ stageEl, letter, correctWagons, allWords, sou
             const missing = correctSet.size !== selectedWords.filter(word => correctSet.has(word)).length;
             const extra = selectedWords.some(word => !correctSet.has(word));
             const success = hasAllCorrect && !missing && !extra && !hasDuplicates && selectedWords.length === correctSet.size;
+            
+            logOK('memoryTest', 'evaluated', { 
+                success, 
+                selected: selectedWords.length, 
+                required: correctSet.size 
+            });
+            
             if (success) {
                 resetFeedback('is-success', texts.memory.success);
                 soundManager.playSuccess?.();

@@ -18,12 +18,18 @@
     <!-- Шрифт: Nunito (дружній округлий) -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/styles/theme.css">
-    <!-- Основні стилі: preload + fallback -->
-    <!-- Зауваження: inline onload може блокуватися політикою CSP; у такому разі використайте простий <link rel="stylesheet"> або зовнішній скрипт для перемикання rel. -->
-    <link rel="preload" href="src/styles/main.css" as="style" onload="this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="src/styles/main.css">
-    </noscript>
+    <!-- Основні стилі: модульна структура -->
+    <link rel="stylesheet" href="src/styles/base.css">
+    <link rel="stylesheet" href="src/styles/layout.css">
+    <link rel="stylesheet" href="src/styles/components/loader.css">
+    <link rel="stylesheet" href="src/styles/components/toolbar.css">
+    <link rel="stylesheet" href="src/styles/components/footer.css">
+    <link rel="stylesheet" href="src/styles/components/message.css">
+    <link rel="stylesheet" href="src/styles/screens/home.css">
+    <link rel="stylesheet" href="src/styles/screens/game-stage.css">
+    <link rel="stylesheet" href="src/styles/screens/questions.css">
+    <link rel="stylesheet" href="src/styles/screens/memory-test.css">
+    <link rel="stylesheet" href="src/styles/screens/final-screen.css">
 </head>
 <body>
     <!-- Основний контейнер SPA: фокус встановлюється з JS; role="main" + tabindex="-1" покращують доступність навігації. -->

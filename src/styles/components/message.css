@@ -1,0 +1,32 @@
+/*
+    message.css — центральне повідомлення на ігровому екрані
+*/
+
+.game-stage__message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 1rem 2rem;
+    border-radius: var(--radius-3);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    z-index: 25;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-fast);
+}
+
+.game-stage__message.is-visible {
+    opacity: 1;
+}
+
+.game-stage__message.is-success {
+    background: var(--status-success-bg);
+    color: #ffffff;
+}
+
+.game-stage__message.is-error {
+    background: var(--status-error-bg);
+    color: #ffffff;
+}

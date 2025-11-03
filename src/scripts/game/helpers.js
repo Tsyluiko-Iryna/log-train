@@ -32,12 +32,3 @@ export function randomPosition(width, height, stageRect) {
         y: Math.random() * maxY + 8,
     };
 }
-
-export function isWithinStage(rect, stageRect) {
-    return (
-        rect.left >= stageRect.left &&
-        rect.top >= stageRect.top &&
-        rect.right <= stageRect.right &&
-        rect.bottom <= stageRect.bottom
-    );
-}

@@ -2,8 +2,12 @@ import { createLoadingOverlay } from './ui/loadingOverlay.js';
 import { initRouter } from './router.js';
 import { logError } from './utils/logger.js';
 import { texts } from './data/texts.js';
+import { initErrorBoundary } from './utils/errorBoundary.js';
 // Differentiation data now comes from src/scripts/data/words/pairs.js via wordSets.
 // No need to prefetch from text file on startup.
+
+// Ініціалізуємо error boundary ПЕРЕД будь-яким іншим кодом
+initErrorBoundary();
 
 // Robust bootstrap: handle DOM readiness, protect against failing loader,
 // await router init if it returns a Promise, and ensure loader is hidden.
@@ -19,12 +23,11 @@ async function bootstrap() {
         loader = createLoadingOverlay(document.body) || {};
     } catch (err) {
         logError('main.createLoadingOverlay', err);
-        loader = { show: () => {}, hide: () => {}, updateProgress: () => {} };
+        loader = { show: () => {}, hide: () => {} };
     }
 
     const showLoader = typeof loader.show === 'function' ? loader.show.bind(loader) : () => {};
     const hideLoader = typeof loader.hide === 'function' ? loader.hide.bind(loader) : () => {};
-    const updateProgress = typeof loader.updateProgress === 'function' ? loader.updateProgress.bind(loader) : () => {};
 
     try {
         // Show loader while router initializes
@@ -44,7 +47,6 @@ async function bootstrap() {
             appRoot,
             showLoader,
             hideLoader,
-            updateProgress,
         }));
 
         // Focus the app root after router mounts content for better a11y

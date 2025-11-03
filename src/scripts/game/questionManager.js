@@ -1,6 +1,6 @@
 import { createElement, setTextContent } from '../utils/dom.js';
 import { texts } from '../data/texts.js';
-import { logError } from '../utils/logger.js';
+import { logError, logOK } from '../utils/logger.js';
 
 function shuffle(array) {
     const copy = [...array];
@@ -21,6 +21,12 @@ function selectHalf(items) {
 }
 
 function buildQuestions(wagons) {
+    // Перевірка на пустий масив
+    if (!wagons || wagons.length === 0) {
+        logError('questions.buildQuestions', new Error('Empty wagons array provided'));
+        return [];
+    }
+
     const names = wagons.map(item => item.text);
     const questions = [];
 
@@ -137,6 +143,7 @@ export function createQuestionManager({ stageEl, wagons, soundManager, onComplet
             return { correct: false, finished: questionIndex >= preparedQuestions.length };
         }
         if (word === item.answer) {
+            logOK('questionManager', 'correctAnswer', { word, questionIndex: questionIndex + 1 });
             updatePanelState('is-success');
             setTextContent(questionText, texts.questions.correct);
             soundManager.playSuccess?.();
@@ -184,7 +191,7 @@ export function createQuestionManager({ stageEl, wagons, soundManager, onComplet
     return {
         evaluate,
         destroy() {
-            clearFeedbackTimer();
+            clearFeedbackTimer(); // Очистка таймера при знищенні
             panel.remove();
         },
     };

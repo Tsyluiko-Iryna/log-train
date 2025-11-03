@@ -1,14 +1,15 @@
 import { createElement, clearElement, setTextContent } from '../../utils/dom.js';
 import { getSelection, clearSelection } from '../../store/session.js';
-import { getTypeData, getAllWordsForLetter, getCatalog } from '../../data/wordSets.js';
+import { getTypeData, getAllWordsForLetter } from '../../data/wordSets.js';
 import { texts } from '../../data/texts.js';
 import { preloadImages } from '../../game/assetLoader.js';
-import { createTrainManager } from '../../game/trainManager.js';
+import { createTrainManager } from '../../game/train/trainManager.js';
 import { createSoundManager } from '../../game/soundManager.js';
 import { createQuestionManager } from '../../game/questionManager.js';
 import { createMemoryTest } from '../../game/memoryTest.js';
-import { logError } from '../../utils/logger.js';
-import { getImageUrl } from '../../utils/assets.js';
+import { logError, logOK } from '../../utils/logger.js';
+import { computeMemoryDistractors } from './distractors.js';
+import { renderLockedTrain } from './trainRenderer.js';
 
 function shuffle(array) {
     const copy = [...array];
@@ -44,112 +45,16 @@ export default async function renderGame(appRoot, context) {
         const correctWords = typeData.correct.map(item => ({ text: item.text, file: item.file }));
         const requiredDistractors = Math.max(9 - correctWords.length, 0);
 
-        const catalog = getCatalog();
-        function uniqByText(list) {
-            const seen = new Set();
-            const out = [];
-            list.forEach(it => {
-                if (!seen.has(it.text)) {
-                    seen.add(it.text);
-                    out.push({ text: it.text, file: it.file });
-                }
-            });
-            return out;
-        }
-        function wordsFromTypeIds(ids) {
-            const acc = [];
-            ids.forEach(id => {
-                const t = catalog.types[id];
-                if (t?.correct?.length) {
-                    t.correct.forEach(w => acc.push({ text: w.text, file: w.file }));
-                }
-            });
-            return uniqByText(acc);
-        }
-        function allCorrectWordsGlobal() {
-            const acc = [];
-            Object.values(catalog.types).forEach(t => {
-                if (t?.correct?.length) {
-                    t.correct.forEach(w => acc.push({ text: w.text, file: w.file }));
-                }
-            });
-            return uniqByText(acc);
-        }
-        function computeMemoryDistractors(letter, typeName, needed) {
-            const id = `${letter}|${typeName}`;
-            const meta = catalog.types[id];
-            if (!meta) {
-                // Якщо немає метаданих для типу: використовуємо глобальний пул лише правильних слів, виключивши поточні
-                let pool = allCorrectWordsGlobal().filter(item => !correctWords.some(w => w.text === item.text));
-                return shuffle(pool).slice(0, needed);
-            }
-            let pool = [];
-            if (meta.mode === 'lexical') {
-                const others = catalog.byLetter[letter]?.types?.lexical?.filter(tid => tid !== id) || [];
-                pool = wordsFromTypeIds(others);
-                if (pool.length < needed) {
-                    // Розширюємо до позицій цієї ж літери (все ще тільки правильні слова)
-                    const posIds = catalog.byLetter[letter]?.types?.positions || [];
-                    const extra = wordsFromTypeIds(posIds);
-                    const merged = [...pool, ...extra];
-                    pool = uniqByText(merged);
-                }
-            } else if (meta.mode === 'position') {
-                const others = catalog.byLetter[letter]?.types?.positions?.filter(tid => tid !== id) || [];
-                pool = wordsFromTypeIds(others);
-                if (pool.length < needed) {
-                    // Розширюємо до лексичних тем цієї ж літери (тільки правильні слова)
-                    const lexIds = catalog.byLetter[letter]?.types?.lexical || [];
-                    const extra = wordsFromTypeIds(lexIds);
-                    const merged = [...pool, ...extra];
-                    pool = uniqByText(merged);
-                }
-            } else if (meta.mode === 'diff') {
-                const [a, b] = (meta.pair || '').split('-');
-                const reverse = `${b}-${a}`;
-                const bucket = /^Звук/i.test(meta.label) ? 'positions' : 'topics';
-                const container = catalog.byLetter[b]?.pairs?.[reverse];
-                const ids = container ? (container[bucket] || []) : [];
-                pool = wordsFromTypeIds(ids);
-                if (pool.length < needed) {
-                    // Розширюємо до іншого кошика (тематики/позиції) для другої літери
-                    const otherBucket = bucket === 'topics' ? 'positions' : 'topics';
-                    const ids2 = container ? (container[otherBucket] || []) : [];
-                    const extra = wordsFromTypeIds(ids2);
-                    pool = uniqByText([...pool, ...extra]);
-                }
-                if (pool.length < needed) {
-                    // Останній крок: додати правильні слова з основної літери (лексика та позиції)
-                    const lexIdsA = catalog.byLetter[a]?.types?.lexical || [];
-                    const posIdsA = catalog.byLetter[a]?.types?.positions || [];
-                    const extraA = wordsFromTypeIds([...lexIdsA, ...posIdsA]);
-                    pool = uniqByText([...pool, ...extraA]);
-                }
-            }
-            // Виключаємо поточні правильні слова з пулу відволікачів
-            pool = pool.filter(item => !correctWords.some(w => w.text === item.text));
-            if (pool.length < needed) {
-                // Глобальний запасний варіант: усі правильні слова (без поточних)
-                const global = allCorrectWordsGlobal().filter(item => !correctWords.some(w => w.text === item.text));
-                const extra = global.filter(x => !pool.some(p => p.text === x.text));
-                pool = [...pool, ...extra];
-            }
-            return shuffle(pool).slice(0, needed);
-        }
-
-        const memoryDistractors = computeMemoryDistractors(letter, type, requiredDistractors);
+        const memoryDistractors = computeMemoryDistractors(letter, type, correctWords, requiredDistractors);
 
         const assets = new Set(['locomotive.png']);
         typeData.all.forEach(word => assets.add(word.file));
         memoryDistractors.forEach(word => assets.add(word.file));
 
         context.showLoader(texts.loader.fetchingAssets);
-        // Попереднє завантаження всіх потрібних зображень з оновленням індикатора прогресу
-        await preloadImages(Array.from(assets), {
-            onProgress: (current, total) => context.updateProgress(current, total),
-        });
+        await preloadImages(Array.from(assets));
+        logOK('gameView', 'assetsLoaded', { count: assets.size });
         context.hideLoader();
-        context.updateProgress();
 
         clearElement(appRoot);
         const stage = createElement('div', { classes: 'game-stage' });
@@ -235,6 +140,7 @@ export default async function renderGame(appRoot, context) {
                     showStatus('error');
                     return;
                 }
+                logOK('gameView', 'trainValidated', { wagons: result.order.length });
                 soundManager.playSuccess();
                 showStatus('success');
                 checkButton.remove();
@@ -261,78 +167,12 @@ export default async function renderGame(appRoot, context) {
                 trainManager.detachAllLocks();
                 trainManager.destroy();
                 trainManager = null;
-                const locked = renderLockedTrain(orderData);
+                const locked = renderLockedTrain(stage, orderData);
                 lockedTrain = locked;
                 setupQuestions(locked, orderData.slice(1));
             } catch (error) {
                 logError('game.handleTrainAssembled', error);
             }
-        }
-
-        function renderLockedTrain(orderData) {
-            const area = createElement('div', { classes: 'train-locked-area' });
-            const label = createElement('div', { classes: 'train-locked-area__label', text: texts.game.lockedTrainLabel });
-            const row = createElement('div', { classes: 'train-locked-row' });
-            const interactive = [];
-            orderData.forEach((item, index) => {
-                const car = createTrainCar(item, index === 0);
-                row.append(car.element);
-                if (!car.isCab) {
-                    interactive.push(car);
-                }
-            });
-            area.append(label, row);
-            stage.append(area);
-            const cleanupListeners = [];
-            return {
-                area,
-                wagons: interactive,
-                addWagonListener(handler) {
-                    interactive.forEach(car => {
-                        const fn = () => handler(car);
-                        car.element.addEventListener('click', fn);
-                        cleanupListeners.push(() => car.element.removeEventListener('click', fn));
-                    });
-                },
-                removeListeners() {
-                    cleanupListeners.splice(0).forEach(fn => {
-                        try {
-                            fn();
-                        } catch (error) {
-                            logError('game.removeListeners', error);
-                        }
-                    });
-                },
-                destroy() {
-                    this.removeListeners();
-                    area.remove();
-                },
-            };
-        }
-
-        function createTrainCar(item, isCab) {
-            const classes = ['train-car'];
-            if (isCab) {
-                classes.push('train-car--cab');
-            } else {
-                classes.push('train-car--interactive');
-            }
-            const element = createElement('div', { classes });
-            const img = createElement('img', {
-                classes: 'train-car__image',
-                attrs: {
-                    src: getImageUrl(item.file),
-                    alt: item.text,
-                    draggable: 'false',
-                },
-            });
-            const label = createElement('div', {
-                classes: 'train-car__label',
-                text: item.text,
-            });
-            element.dataset.word = item.text;
-            element.append(img, label);
-            return { element, isCab };
         }
 
         function setupQuestions(locked, wagons) {

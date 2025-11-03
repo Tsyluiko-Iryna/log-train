@@ -2,6 +2,7 @@ import { logError } from '../utils/logger.js';
 
 export function createSoundManager() {
     let audioContext = null;
+    const activeNodes = new Set(); // Зберігаємо активні ноди для cleanup
 
     function ensureContext() {
         try {
@@ -35,11 +36,20 @@ export function createSoundManager() {
                 gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
             }
             oscillator.connect(gain).connect(ctx.destination);
+            
+            // Додаємо до активних нод
+            const nodeSet = { oscillator, gain };
+            activeNodes.add(nodeSet);
+            
             oscillator.start(startTime);
             oscillator.stop(startTime + duration);
+            
+            // Cleanup після завершення
             oscillator.addEventListener('ended', () => {
                 try { oscillator.disconnect(); } catch {}
                 try { gain.disconnect(); } catch {}
+                // Видаляємо з активних нод
+                activeNodes.delete(nodeSet);
             });
         } catch (error) {
             logError('sound.playTone', error);
@@ -47,7 +57,23 @@ export function createSoundManager() {
     }
 
     async function dispose() {
-        // Додатковий метод для звільнення ресурсів на мобільних/слабких пристроях
+        // Очищаємо всі активні осцилятори перед закриттям контексту
+        try {
+            for (const { oscillator, gain } of activeNodes) {
+                try {
+                    oscillator.stop();
+                    oscillator.disconnect();
+                } catch {}
+                try {
+                    gain.disconnect();
+                } catch {}
+            }
+            activeNodes.clear();
+        } catch (error) {
+            logError('sound.disposeNodes', error);
+        }
+
+        // Закриваємо аудіо контекст
         try {
             const ctx = audioContext;
             if (ctx && typeof ctx.close === 'function' && ctx.state !== 'closed') {
@@ -71,6 +97,11 @@ export function createSoundManager() {
         },
         playAttach() {
             // Короткий «клік» з підтверджувальним обертоном
+            playTone({ frequency: 520, duration: 0.07, type: 'square', volume: 0.18, fade: true });
+            setTimeout(() => playTone({ frequency: 780, duration: 0.08, type: 'triangle', volume: 0.16, fade: true }), 40);
+        },
+        playDetach() {
+            // Такий же звук як і при з'єднанні
             playTone({ frequency: 520, duration: 0.07, type: 'square', volume: 0.18, fade: true });
             setTimeout(() => playTone({ frequency: 780, duration: 0.08, type: 'triangle', volume: 0.16, fade: true }), 40);
         },

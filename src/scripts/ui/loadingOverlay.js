@@ -7,22 +7,16 @@ export function createLoadingOverlay(parent = document.body) {
         const overlay = createElement('div', { classes: 'loader-overlay' });
         const box = createElement('div', { classes: 'loader-box' });
         const spinner = createElement('div', { classes: 'loader-spinner' });
-    // Повідомлення за замовчуванням бере з texts; у разі відсутності — використовується простий рядок
-    const defaultMessage = (texts && texts.loader && texts.loader.loading) ? texts.loader.loading : 'Loading…';
+        const defaultMessage = (texts && texts.loader && texts.loader.loading) ? texts.loader.loading : 'Loading…';
         const text = createElement('div', { classes: 'loader-text', text: defaultMessage });
-        const progress = createElement('div', { classes: 'loader-progress', text: '' });
 
-    // Мінімальні атрибути доступності (не ламають існуючий API)
-    // Стан видимості оверлею відображається в aria-* при show/hide
-    overlay.setAttribute('aria-hidden', 'true');
-    overlay.setAttribute('aria-busy', 'false');
-    // Spinner є декоративним елементом — приховуємо його від AT
-    spinner.setAttribute('aria-hidden', 'true');
-    // Повідомлення про завантаження оголошуються коректно для допоміжних технологій
-    text.setAttribute('role', 'status');
-    text.setAttribute('aria-live', 'polite');
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('aria-busy', 'false');
+        spinner.setAttribute('aria-hidden', 'true');
+        text.setAttribute('role', 'status');
+        text.setAttribute('aria-live', 'polite');
 
-        box.append(spinner, text, progress);
+        box.append(spinner, text);
         overlay.append(box);
         parent.append(overlay);
 
@@ -41,13 +35,6 @@ export function createLoadingOverlay(parent = document.body) {
                 overlay.setAttribute('aria-hidden', 'true');
                 overlay.setAttribute('aria-busy', 'false');
             },
-            updateProgress(current, total) {
-                if (typeof current === 'number' && typeof total === 'number' && total > 0) {
-                    setTextContent(progress, `${current} / ${total}`);
-                } else {
-                    setTextContent(progress, '');
-                }
-            },
         };
 
         return api;
@@ -57,7 +44,7 @@ export function createLoadingOverlay(parent = document.body) {
             element: null,
             show() {},
             hide() {},
-            updateProgress() {},
         };
     }
 }
+
