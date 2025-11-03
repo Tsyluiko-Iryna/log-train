@@ -16,7 +16,7 @@
 
   /* Text-specific tokens */
   --heading-color: #1565C0;       /* H1/H2 */
-  --subheading-color: #F57C00;    /* H3/мітки секцій */
+  --subheading-color: #1A3E78;    /* H3/мітки секцій — темно-синій для кращого контрасту */
   --accent-text-strong: #E65100;  /* акцентні фрази у тексті */
   --service-text-color: #6B7280;  /* футер/службові */
   --btn-text-inactive: #FFFFFF;   /* текст на кольорових кнопках завжди білий */
