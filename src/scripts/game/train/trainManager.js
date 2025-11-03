@@ -24,6 +24,34 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
     const cabId = 'cab';
     const lockManager = createLockManager(stageEl, nodes);
 
+    // Обчислює і застосовує розміри вагончиків/кабіни/замків так,
+    // щоб повний потяг (кабіна + всі вагончики) міг вміститись в один ряд на сцені.
+    function computeAndApplyTrainSizes() {
+        try {
+            const total = nodes.size; // кабіна + всі слова
+            if (!total) return;
+            const stageWidth = stageEl.clientWidth || 0;
+            if (stageWidth <= 0) return;
+            // Поля та зазор між з'єднаними елементами
+            const paddingX = 16; // лівий+правий запас
+            const gap = 4; // як у вирівнюванні групи
+            const available = Math.max(stageWidth - paddingX * 2 - Math.max(total - 1, 0) * gap, 0);
+            let item = Math.floor(available / total);
+            // Межі на випадок дуже маленьких/великих екранів
+            const MIN = 52;  // синхронізовано з найменшими брейкпоінтами CSS
+            const MAX = 240; // синхронізовано з найбільшими брейкпоінтами CSS
+            item = Math.max(MIN, Math.min(item, MAX));
+            // Розмір замка як частка від вагончика
+            const lock = Math.max(24, Math.min(Math.round(item * 0.22), 44));
+            // Застосовуємо значення як CSS-змінні до стадії (щоб обмежити область)
+            stageEl.style.setProperty('--train-item-size', `${item}px`);
+            stageEl.style.setProperty('--train-car-size', `${item}px`);
+            stageEl.style.setProperty('--train-lock-size', `${lock}px`);
+        } catch (e) {
+            logError('train.computeAndApplyTrainSizes', e);
+        }
+    }
+
     function scheduleAfterMove(group) {
         state.pendingGroupForLocks = group;
         if (state.afterMoveRaf) {
@@ -421,6 +449,8 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
             createWordNodes();
             await nextFrame();
             await nextFrame();
+            // Після рендера елементів встановимо розміри під кількість вагончиків
+            computeAndApplyTrainSizes();
             placeNodesRandomly();
             
             let resizeTimeout = null;
@@ -429,6 +459,8 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
                     clearTimeout(resizeTimeout);
                 }
                 resizeTimeout = setTimeout(() => {
+                    // Спочатку оновлюємо CSS-розміри під нову ширину
+                    computeAndApplyTrainSizes();
                     const oldBounds = { ...state.bounds };
                     updateBounds();
                     
@@ -511,18 +543,20 @@ export function createTrainManager({ stageEl, letter, typeData, soundManager = n
                         clampClusterIntoBounds(groupIds);
                     });
                     
-                    // Оновлюємо замки для всіх груп після перебудови
+                    // Оновлюємо замки з затримкою для коректного позиціонування
                     requestAnimationFrame(() => {
                         requestAnimationFrame(() => {
-                            clusters.forEach(groupIds => {
-                                if (!groupIds || groupIds.length === 0) {
-                                    return;
-                                }
-                                try {
-                                    lockManager.repositionLocksForGroup(groupIds, getNodeBox);
-                                } catch (e) {
-                                    logError('train.resizeLocks', e);
-                                }
+                            requestAnimationFrame(() => {
+                                clusters.forEach(groupIds => {
+                                    if (!groupIds || groupIds.length === 0) {
+                                        return;
+                                    }
+                                    try {
+                                        lockManager.repositionLocksForGroup(groupIds, getNodeBox);
+                                    } catch (e) {
+                                        logError('train.resizeLocks', e);
+                                    }
+                                });
                             });
                         });
                     });

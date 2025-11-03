@@ -20,8 +20,8 @@
 
 .train-item {
     position: absolute;
-    width: clamp(75px, 14vw, 140px);
-    height: clamp(75px, 14vw, 140px);
+    width: var(--train-item-size, clamp(75px, 14vw, 180px));
+    height: var(--train-item-size, clamp(75px, 14vw, 180px));
     border-radius: var(--radius-4);
     background: var(--color-panel);
     border: 2px solid transparent;
@@ -34,6 +34,28 @@
     z-index: 10;
     overflow: hidden;
     cursor: grab;
+}
+
+/* Збільшення для широких екранів */
+@media (min-width: 1400px) {
+    .train-item {
+        width: var(--train-item-size, clamp(100px, 13vw, 200px));
+        height: var(--train-item-size, clamp(100px, 13vw, 200px));
+    }
+}
+
+@media (min-width: 1600px) {
+    .train-item {
+        width: var(--train-item-size, clamp(110px, 12vw, 220px));
+        height: var(--train-item-size, clamp(110px, 12vw, 220px));
+    }
+}
+
+@media (min-width: 1920px) {
+    .train-item {
+        width: var(--train-item-size, clamp(120px, 11vw, 240px));
+        height: var(--train-item-size, clamp(120px, 11vw, 240px));
+    }
 }
 
 .train-item--cab .train-item__label {
@@ -77,6 +99,21 @@
     pointer-events: none;
 }
 
+/* Збільшення шрифту міток для широких екранів */
+@media (min-width: 1400px) {
+    .train-item__label {
+        font-size: clamp(0.78rem, 1.35vw, 1rem);
+        padding: clamp(0.3rem, 0.65vh, 0.45rem) clamp(0.45rem, 1.05vw, 0.65rem);
+    }
+}
+
+@media (min-width: 1920px) {
+    .train-item__label {
+        font-size: clamp(0.85rem, 1.3vw, 1.1rem);
+        padding: clamp(0.35rem, 0.7vh, 0.5rem) clamp(0.5rem, 1.15vw, 0.75rem);
+    }
+}
+
 .train-item.is-dragging {
     box-shadow: var(--shadow-elevated);
     z-index: 20;
@@ -100,8 +137,8 @@
 
 .train-lock {
     position: absolute;
-    width: clamp(24px, 4.5vw, 32px);
-    height: clamp(24px, 4.5vw, 32px);
+    width: var(--train-lock-size, clamp(24px, 4.5vw, 36px));
+    height: var(--train-lock-size, clamp(24px, 4.5vw, 36px));
     border-radius: 50%;
     background: var(--lock-bg);
     display: flex;
@@ -113,6 +150,21 @@
     border: none;
     box-shadow: var(--shadow-sm);
     z-index: 21;
+}
+
+/* Збільшення замків для широких екранів */
+@media (min-width: 1400px) {
+    .train-lock {
+        width: var(--train-lock-size, clamp(28px, 4vw, 40px));
+        height: var(--train-lock-size, clamp(28px, 4vw, 40px));
+    }
+}
+
+@media (min-width: 1920px) {
+    .train-lock {
+        width: var(--train-lock-size, clamp(32px, 3.5vw, 44px));
+        height: var(--train-lock-size, clamp(32px, 3.5vw, 44px));
+    }
 }
 
 .game-stage.is-dragging .train-lock {
@@ -133,11 +185,26 @@
     left: 0;
     right: 0;
     bottom: 0;
-    min-height: clamp(140px, 28vh, 220px);
+    min-height: clamp(140px, 28vh, 240px);
     padding: clamp(0.6rem, 1.2vh, 1rem) clamp(0.75rem, 2vw, 1.5rem);
     background: var(--locked-area-bg);
     border-top: 1px solid var(--color-border);
     box-shadow: var(--shadow-up-lg);
+}
+
+/* Збільшення нижньої панелі для широких екранів */
+@media (min-width: 1400px) {
+    .train-locked-area {
+        min-height: clamp(160px, 30vh, 260px);
+        padding: clamp(0.8rem, 1.4vh, 1.2rem) clamp(1rem, 2.5vw, 2rem);
+    }
+}
+
+@media (min-width: 1920px) {
+    .train-locked-area {
+        min-height: clamp(180px, 32vh, 280px);
+        padding: clamp(1rem, 1.6vh, 1.4rem) clamp(1.25rem, 3vw, 2.5rem);
+    }
 }
 
 .train-locked-area__label {
@@ -156,8 +223,8 @@
 
 .train-car {
     position: relative;
-    width: clamp(70px, 13vw, 130px);
-    height: clamp(70px, 13vw, 130px);
+    width: var(--train-car-size, clamp(70px, 13vw, 170px));
+    height: var(--train-car-size, clamp(70px, 13vw, 170px));
     aspect-ratio: 1 / 1;
     border-radius: var(--radius-3);
     background: var(--color-panel);
@@ -169,6 +236,28 @@
     justify-content: space-between;
     padding: 0;
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+/* Збільшення для широких екранів */
+@media (min-width: 1400px) {
+    .train-car {
+        width: var(--train-car-size, clamp(95px, 12vw, 190px));
+        height: var(--train-car-size, clamp(95px, 12vw, 190px));
+    }
+}
+
+@media (min-width: 1600px) {
+    .train-car {
+        width: var(--train-car-size, clamp(105px, 11vw, 210px));
+        height: var(--train-car-size, clamp(105px, 11vw, 210px));
+    }
+}
+
+@media (min-width: 1920px) {
+    .train-car {
+        width: var(--train-car-size, clamp(115px, 10vw, 230px));
+        height: var(--train-car-size, clamp(115px, 10vw, 230px));
+    }
 }
 
 .train-car__image {
@@ -195,6 +284,21 @@
     background: var(--label-ink-gradient);
     border-radius: clamp(6px, 1.2vw, 8px);
     pointer-events: none;
+}
+
+/* Збільшення шрифту міток для широких екранів */
+@media (min-width: 1400px) {
+    .train-car__label {
+        font-size: clamp(0.75rem, 1.3vw, 0.95rem);
+        padding: clamp(0.28rem, 0.6vh, 0.4rem) clamp(0.4rem, 1vw, 0.65rem);
+    }
+}
+
+@media (min-width: 1920px) {
+    .train-car__label {
+        font-size: clamp(0.82rem, 1.25vw, 1.05rem);
+        padding: clamp(0.32rem, 0.65vh, 0.45rem) clamp(0.45rem, 1.1vw, 0.75rem);
+    }
 }
 
 .train-car--cab .train-car__label {
@@ -236,13 +340,13 @@
     }
     
     .train-item {
-        width: clamp(70px, 13vw, 120px);
-        height: clamp(70px, 13vw, 120px);
+        width: var(--train-item-size, clamp(70px, 13vw, 120px));
+        height: var(--train-item-size, clamp(70px, 13vw, 120px));
     }
     
     .train-car {
-        width: clamp(65px, 12vw, 110px);
-        height: clamp(65px, 12vw, 110px);
+        width: var(--train-car-size, clamp(65px, 12vw, 110px));
+        height: var(--train-car-size, clamp(65px, 12vw, 110px));
     }
 }
 
@@ -257,13 +361,13 @@
     }
     
     .train-item {
-        width: clamp(65px, 12.5vw, 105px);
-        height: clamp(65px, 12.5vw, 105px);
+        width: var(--train-item-size, clamp(65px, 12.5vw, 105px));
+        height: var(--train-item-size, clamp(65px, 12.5vw, 105px));
     }
     
     .train-car {
-        width: clamp(60px, 11.5vw, 95px);
-        height: clamp(60px, 11.5vw, 95px);
+        width: var(--train-car-size, clamp(60px, 11.5vw, 95px));
+        height: var(--train-car-size, clamp(60px, 11.5vw, 95px));
     }
 }
 
@@ -278,13 +382,13 @@
     }
     
     .train-item {
-        width: clamp(58px, 12vw, 90px);
-        height: clamp(58px, 12vw, 90px);
+        width: var(--train-item-size, clamp(58px, 12vw, 90px));
+        height: var(--train-item-size, clamp(58px, 12vw, 90px));
     }
     
     .train-car {
-        width: clamp(54px, 11vw, 82px);
-        height: clamp(54px, 11vw, 82px);
+        width: var(--train-car-size, clamp(54px, 11vw, 82px));
+        height: var(--train-car-size, clamp(54px, 11vw, 82px));
     }
     
     .train-item__label,
@@ -301,13 +405,13 @@
 
 @media (max-width: 380px) {
     .train-item {
-        width: clamp(52px, 11.5vw, 80px);
-        height: clamp(52px, 11.5vw, 80px);
+        width: var(--train-item-size, clamp(52px, 11.5vw, 80px));
+        height: var(--train-item-size, clamp(52px, 11.5vw, 80px));
     }
     
     .train-car {
-        width: clamp(48px, 10.5vw, 72px);
-        height: clamp(48px, 10.5vw, 72px);
+        width: var(--train-car-size, clamp(48px, 10.5vw, 72px));
+        height: var(--train-car-size, clamp(48px, 10.5vw, 72px));
     }
     
     .train-locked-row {
@@ -333,12 +437,12 @@
     }
     
     .train-item {
-        width: clamp(60px, 11vw, 95px);
-        height: clamp(60px, 11vw, 95px);
+        width: var(--train-item-size, clamp(60px, 11vw, 95px));
+        height: var(--train-item-size, clamp(60px, 11vw, 95px));
     }
     
     .train-car {
-        width: clamp(55px, 10vw, 85px);
-        height: clamp(55px, 10vw, 85px);
+        width: var(--train-car-size, clamp(55px, 10vw, 85px));
+        height: var(--train-car-size, clamp(55px, 10vw, 85px));
     }
 }

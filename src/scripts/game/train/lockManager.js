@@ -3,11 +3,22 @@ import { createElement } from '../../utils/dom.js';
 import { logError } from '../../utils/logger.js';
 import { nextFrame } from '../helpers.js';
 
-const LOCK_SIZE = 32;
-const LOCK_HALF = LOCK_SIZE / 2;
-
 export function createLockManager(stageEl, nodes) {
     const locks = new Map();
+
+    function updateNodeSizes(nodesToUpdate) {
+        nodesToUpdate.forEach(node => {
+            try {
+                const rect = node.element.getBoundingClientRect();
+                if (rect && rect.width > 0 && rect.height > 0) {
+                    node.size.width = rect.width;
+                    node.size.height = rect.height;
+                }
+            } catch (error) {
+                logError('lockManager.updateNodeSizes', error);
+            }
+        });
+    }
 
     function createLock(nodeA, nodeB, getNodeBox, handleLockClick) {
         const key = createLockKey(nodeA.id, nodeB.id);
@@ -26,16 +37,26 @@ export function createLockManager(stageEl, nodes) {
         try {
             lock.style.transition = 'none';
         } catch {}
-        positionLock(lock, nodeA, nodeB, getNodeBox);
+        
+        // Синхронізуємо розміри перед позиціонуванням
+        updateNodeSizes([nodeA, nodeB]);
+        
         stageEl.append(lock);
         
         try {
-            nextFrame().then(() => { lock.style.transition = ''; });
-        } catch {}
+            nextFrame().then(() => {
+                positionLock(lock, nodeA, nodeB, getNodeBox);
+            });
+        } catch (e) {
+            logError('lockManager.createLock', e);
+        }
     }
 
     function positionLock(lock, nodeA, nodeB, getNodeBox) {
         try {
+            // Оновлюємо розміри перед позиціонуванням
+            updateNodeSizes([nodeA, nodeB]);
+            
             const boxA = getNodeBox(nodeA);
             const boxB = getNodeBox(nodeB);
             
@@ -43,17 +64,35 @@ export function createLockManager(stageEl, nodes) {
                 return;
             }
             
+            // Динамічно отримуємо розмір замочка з DOM
+            const lockRect = lock.getBoundingClientRect();
+            const lockHalfWidth = lockRect.width / 2 || 16;
+            const lockHalfHeight = lockRect.height / 2 || 16;
+            
             const aIsLeft = boxA.centerX <= boxB.centerX;
             const seamX = aIsLeft ? boxA.right : boxB.right;
             const centerX = seamX;
             const centerY = (boxA.centerY + boxB.centerY) / 2;
-            lock.style.transform = `translate3d(${centerX - LOCK_HALF}px, ${centerY - LOCK_HALF}px, 0)`;
+            
+            const finalX = centerX - lockHalfWidth;
+            const finalY = centerY - lockHalfHeight;
+            
+            lock.style.transform = `translate3d(${finalX}px, ${finalY}px, 0)`;
         } catch (e) {
             logError('lockManager.positionLock', e);
         }
     }
 
     function repositionLocksForGroup(group, getNodeBox) {
+        // Спочатку оновлюємо розміри всіх вагончиків групи
+        const groupNodes = group.map(nodeIdOrNode => {
+            const nodeId = typeof nodeIdOrNode === 'string' ? nodeIdOrNode : nodeIdOrNode.id;
+            return nodes.get(nodeId);
+        }).filter(Boolean);
+        
+        updateNodeSizes(groupNodes);
+        
+        // Тепер позиціонуємо замочки
         group.forEach(nodeIdOrNode => {
             // Підтримка як ID так і об'єктів нод
             const nodeId = typeof nodeIdOrNode === 'string' ? nodeIdOrNode : nodeIdOrNode.id;
@@ -112,5 +151,6 @@ export function createLockManager(stageEl, nodes) {
         repositionLocksForGroup,
         removeLock,
         detachAllLocks,
+        updateNodeSizes,
     };
 }
